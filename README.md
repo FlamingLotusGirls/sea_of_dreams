@@ -1,5 +1,7 @@
-# Serenity
+# Sea of dreams
 Things related to the sea of dreams
+
+Note: This is currently just a copy of the serenity code. The changes to ensure it's not distributed and the updated config are NOT checked in.
 
 ## Audio and Sound
 
