@@ -1,11 +1,26 @@
-use serialport::{self, DataBits, SerialPortType, StopBits};
-use std::io::Write as _;
+mod effects;
+mod output;
+mod preview;
 
-fn main() {
+use iced::{
+    ContentFit, Element, Length, Settings, Size, Subscription, Task, Theme, application, time,
+    window,
+};
+use serialport::{self, DataBits, SerialPort, SerialPortType, StopBits};
+use std::{
+    io::Write as _,
+    time::{Duration, Instant},
+};
+
+use effects::{Effect, get_effect};
+use output::OutputSocket;
+
+fn main() -> iced::Result {
     match serialport::available_ports() {
         Err(e) => {
             eprintln!("Error listing serial ports:");
             eprintln!("{e:?}");
+            ::std::process::exit(1);
         }
         Ok(mut available_ports) => {
             available_ports.sort_by_key(|key| key.port_name.clone());
@@ -44,7 +59,7 @@ fn main() {
             }
 
             if let Some(port) = available_ports.get(0) {
-                let mut port = serialport::new(&port.port_name, 19200)
+                let port = serialport::new(&port.port_name, 19200)
                     .stop_bits(StopBits::One)
                     .data_bits(DataBits::Eight)
                     .open()
@@ -53,16 +68,194 @@ fn main() {
                         ::std::process::exit(1);
                     });
 
-                let command = "!0121.";
-                match port.write(command.as_bytes()) {
-                    Ok(_) => {
-                        print!("{}", command);
-                        std::io::stdout().flush().unwrap();
-                    }
-                    Err(e) => eprintln!("{e:?}"),
-                }
-                println!();
+                return run(port);
+            } else {
+                eprintln!("Error getting first serial port.");
+                ::std::process::exit(1);
             }
         }
     }
+}
+
+// Since we only support one art-net universe (512B), 170 is the maximum number of pixels for now
+const ELDER_COUNT: usize = 9;
+const FRAME_OUTPUT_PERIOD: usize = 2;
+
+fn run(mut port: Box<dyn SerialPort>) -> iced::Result {
+    let command = "!0121.";
+    match port.write(command.as_bytes()) {
+        Ok(_) => {
+            print!("{}", command);
+            std::io::stdout().flush().unwrap();
+        }
+        Err(e) => eprintln!("{e:?}"),
+    }
+    println!();
+
+    application("Haven Server", App::update, App::view)
+        .theme(|_| Theme::Dark)
+        .settings(Settings {
+            antialiasing: true,
+            ..Default::default()
+        })
+        .window(window::Settings {
+            position: window::Position::SpecificWith(|window_size, monitor_dimens| {
+                (0., (monitor_dimens.height / 2.) - (window_size.height / 2.)).into()
+            }),
+            ..Default::default()
+        })
+        .subscription(App::subscription)
+        .run_with(App::new)
+}
+
+struct App {
+    main_window_size: Size,
+    start: Instant,
+    preview: preview::Preview,
+    current_effect: usize,
+    output_socket: OutputSocket,
+    all_effects: Vec<Box<dyn Effect>>,
+    output_enabled: bool,
+    output_frame_count: usize,
+}
+
+#[allow(clippy::enum_variant_names)]
+#[allow(dead_code)]
+#[derive(Debug, Clone)]
+enum Message {
+    SetWindowSize(Size),
+    Tick(Instant),
+    PressOutput,
+    SelectEffect(usize),
+}
+impl App {
+    fn new() -> (Self, Task<Message>) {
+        (
+            App {
+                main_window_size: Size::new(0., 0.),
+                start: Instant::now(),
+                preview: preview::Preview::new(create_crane_lights()),
+                current_effect: 0,
+                output_socket: OutputSocket::new(),
+                all_effects: {
+                    let mut effects: Vec<Box<dyn Effect>> = vec![];
+                    let mut i = 0;
+                    while let Some(effect) = get_effect(i) {
+                        effects.push(effect);
+                        i += 1;
+                    }
+                    effects
+                },
+                output_enabled: true,
+                output_frame_count: 0,
+            },
+            window::get_latest()
+                .and_then(window::get_size)
+                .map(Message::SetWindowSize),
+        )
+    }
+    fn update(&mut self, message: Message) -> Task<Message> {
+        match message {
+            Message::SetWindowSize(size) => {
+                self.main_window_size = size;
+                Task::none()
+            }
+            Message::Tick(now) => {
+                // Clear all pixels
+                for pixel in self.preview.0.iter_mut() {
+                    pixel.r = 0.;
+                    pixel.g = 0.;
+                    pixel.b = 0.;
+                }
+                self.all_effects[self.current_effect].render(&mut self.preview.0, now - self.start);
+
+                if self.output_enabled {
+                    if self.output_frame_count == 0 {
+                        self.output_socket.output(&self.preview.0);
+                    }
+                    self.output_frame_count = (self.output_frame_count + 1) % FRAME_OUTPUT_PERIOD;
+                }
+
+                self.preview.request_redraw();
+
+                Task::none()
+            }
+            Message::PressOutput => {
+                self.output_enabled = !self.output_enabled;
+                Task::none()
+            }
+            Message::SelectEffect(i) => {
+                self.current_effect = i;
+                Task::none()
+            }
+        }
+    }
+
+    fn view(&self) -> Element<Message> {
+        use iced::widget::{column, *};
+        container(column![
+            container(row(self.all_effects.iter().enumerate().map(
+                |(i, effect)| (button(text(effect.name()))
+                    .style(if i == self.current_effect {
+                        button::primary
+                    } else {
+                        button::secondary
+                    })
+                    .on_press(Message::SelectEffect(i)))
+                .into()
+            ))),
+            container(responsive(move |bounds| {
+                let Size { width, height } = ContentFit::Contain.fit(Size::new(1., 1.), bounds);
+                center(
+                    canvas(&self.preview)
+                        .width(Length::Fixed(width))
+                        .height(Length::Fixed(height)),
+                )
+                .into()
+            }))
+            .width(Length::Fill)
+            .height(Length::Fill),
+            checkbox("Output", self.output_enabled).on_toggle(|_| { Message::PressOutput }),
+        ])
+        .width(Length::Fill)
+        .height(Length::Fill)
+        .into()
+    }
+
+    fn subscription(&self) -> Subscription<Message> {
+        time::every(Duration::from_millis(10)).map(Message::Tick)
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct Pixel {
+    pub x: f32,
+    pub y: f32,
+    pub r: f32,
+    pub g: f32,
+    pub b: f32,
+}
+
+/**
+ * We use -1 to 1 for both X and Y axes.
+ */
+fn create_crane_lights() -> Vec<Pixel> {
+    let mut pixels = Vec::with_capacity(ELDER_COUNT);
+
+    let starting_theta = -std::f32::consts::FRAC_PI_2;
+    let radius: f32 = 0.5;
+
+    let elder_count = ELDER_COUNT as f32;
+    for i in 0..ELDER_COUNT {
+        let elder_theta = starting_theta + std::f32::consts::TAU * (i as f32) / elder_count;
+        pixels.push(Pixel {
+            x: elder_theta.cos() * radius,
+            y: elder_theta.sin() * radius,
+            r: 0.,
+            g: 0.,
+            b: 0.,
+        });
+    }
+
+    pixels
 }
