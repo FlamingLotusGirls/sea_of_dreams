@@ -8,10 +8,10 @@ const MY_IP: &str = "0.0.0.0:6454";
 const TARGET_ADDRESS: SocketAddr =
     SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(192, 168, 1, 202), 6454));
 
-pub struct OutputSocket {
+pub struct OutputArtnetSocket {
     socket: UdpSocket,
 }
-impl OutputSocket {
+impl OutputArtnetSocket {
     pub fn new() -> Self {
         let socket = UdpSocket::bind(MY_IP).unwrap();
         socket.set_nonblocking(true).unwrap();

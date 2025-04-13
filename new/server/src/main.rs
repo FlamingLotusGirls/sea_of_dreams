@@ -1,5 +1,5 @@
 mod effects;
-mod output;
+mod output_artnet;
 mod preview;
 
 use iced::{
@@ -13,7 +13,7 @@ use std::{
 };
 
 use effects::{Effect, get_effect};
-use output::OutputSocket;
+use output_artnet::OutputArtnetSocket;
 
 fn main() -> iced::Result {
     match serialport::available_ports() {
@@ -113,7 +113,7 @@ struct App {
     start: Instant,
     preview: preview::Preview,
     current_effect: usize,
-    output_socket: OutputSocket,
+    output_socket: OutputArtnetSocket,
     all_effects: Vec<Box<dyn Effect>>,
     output_enabled: bool,
     output_frame_count: usize,
@@ -136,7 +136,7 @@ impl App {
                 start: Instant::now(),
                 preview: preview::Preview::new(create_elders()),
                 current_effect: 0,
-                output_socket: OutputSocket::new(),
+                output_socket: OutputArtnetSocket::new(),
                 all_effects: {
                     let mut effects: Vec<Box<dyn Effect>> = vec![];
                     let mut i = 0;
