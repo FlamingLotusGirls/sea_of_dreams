@@ -15,7 +15,8 @@ use effects::{Effect, get_effect};
 
 // Since we only support one art-net universe (512B), 170 is the maximum number of total pixels for now
 const ELDER_COUNT: usize = 9;
-const FRAME_OUTPUT_PERIOD: usize = 2;
+const ARTNET_FRAME_OUTPUT_PERIOD: usize = 2;
+const POOFER_FRAME_OUTPUT_PERIOD: usize = 10;
 
 fn main() -> iced::Result {
     application("Haven Server", App::update, App::view)
@@ -41,8 +42,10 @@ struct App {
     current_effect: usize,
     artnet_socket: ArtnetOutputSocket,
     all_effects: Vec<Box<dyn Effect>>,
-    output_enabled: bool,
-    output_frame_count: usize,
+    artnet_output_enabled: bool,
+    poofer_output_enabled: bool,
+    artnet_output_frame_count: usize,
+    poofer_output_frame_count: usize,
     available_serial_ports: Vec<String>,
     poofer_port: Option<PooferBusPort>,
 }
@@ -53,7 +56,8 @@ struct App {
 enum Message {
     SetWindowSize(Size),
     Tick(Instant),
-    PressOutput,
+    ArtnetOutputCheckboxPressed,
+    PooferOutputCheckboxPressed,
     SelectEffect(usize),
     SelectSerialPort(String),
 }
@@ -75,8 +79,10 @@ impl App {
                     }
                     effects
                 },
-                output_enabled: true,
-                output_frame_count: 0,
+                artnet_output_enabled: true,
+                poofer_output_enabled: false,
+                artnet_output_frame_count: 0,
+                poofer_output_frame_count: 0,
                 available_serial_ports: PooferBusPort::available_ports(),
                 poofer_port: None,
             },
@@ -100,19 +106,32 @@ impl App {
                 }
                 self.all_effects[self.current_effect].render(&mut self.preview.0, now - self.start);
 
-                if self.output_enabled {
-                    if self.output_frame_count == 0 {
+                if self.artnet_output_enabled {
+                    if self.artnet_output_frame_count == 0 {
                         self.artnet_socket.output(&self.preview.0);
                     }
-                    self.output_frame_count = (self.output_frame_count + 1) % FRAME_OUTPUT_PERIOD;
+                    self.artnet_output_frame_count =
+                        (self.artnet_output_frame_count + 1) % ARTNET_FRAME_OUTPUT_PERIOD;
+                }
+
+                if let Some(poofer_port) = &mut self.poofer_port {
+                    if self.poofer_output_enabled {
+                        poofer_port.output(&self.preview.0);
+                    }
+                    self.poofer_output_frame_count =
+                        (self.poofer_output_frame_count + 1) % POOFER_FRAME_OUTPUT_PERIOD;
                 }
 
                 self.preview.request_redraw();
 
                 Task::none()
             }
-            Message::PressOutput => {
-                self.output_enabled = !self.output_enabled;
+            Message::ArtnetOutputCheckboxPressed => {
+                self.artnet_output_enabled = !self.artnet_output_enabled;
+                Task::none()
+            }
+            Message::PooferOutputCheckboxPressed => {
+                self.poofer_output_enabled = !self.poofer_output_enabled;
                 Task::none()
             }
             Message::SelectEffect(i) => {
@@ -157,7 +176,10 @@ impl App {
                 .width(Length::Fill)
                 .height(Length::Fill),
             ],
-            checkbox("Output", self.output_enabled).on_toggle(|_| { Message::PressOutput }),
+            checkbox("Output LEDs", self.artnet_output_enabled)
+                .on_toggle(|_| { Message::ArtnetOutputCheckboxPressed }),
+            checkbox("Output Poofers", self.poofer_output_enabled)
+                .on_toggle(|_| { Message::PooferOutputCheckboxPressed }),
         ])
         .width(Length::Fill)
         .height(Length::Fill)
