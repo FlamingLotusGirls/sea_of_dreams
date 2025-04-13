@@ -1,10 +1,10 @@
 use std::time::Duration;
 
-use crate::Pixel;
+use crate::Elder;
 
 pub trait Effect {
     fn name(&self) -> String;
-    fn render(&mut self, target: &mut Vec<Pixel>, time: Duration);
+    fn render(&mut self, elders: &mut Vec<Elder>, time: Duration);
 }
 
 pub fn get_effect(i: usize) -> Option<Box<dyn Effect>> {
@@ -25,19 +25,19 @@ const PERIOD: f32 = 2.37;
 #[derive(Clone, Copy)]
 pub struct TestA;
 impl Effect for TestA {
-    fn render(&mut self, target: &mut Vec<Pixel>, time: Duration) {
+    fn render(&mut self, elders: &mut Vec<Elder>, time: Duration) {
         let d = time.as_secs_f32();
         // let p = 4.0;
         // let prog = ((d % p / p) * 10.);
         let prog = d.sin() * 10.0;
         let width = (d * 1.7).sin() / 2. + 1.;
-        let len = target.len() as i32;
-        // for (i, pixel) in target.iter_mut().skip(50).take(30).enumerate() {
-        for (i, pixel) in target.iter_mut().enumerate() {
+        let len = elders.len() as i32;
+        // for (i, elder) in elders.iter_mut().skip(50).take(30).enumerate() {
+        for (i, elder) in elders.iter_mut().enumerate() {
             let b = (((prog + (i as i32 - len / 2) as f32) * width).sin() + 1.) / 2.;
-            pixel.r = 0.7 * b;
-            pixel.g = 0.7 * b;
-            pixel.b = 1. * b;
+            elder.crane_light.r = 0.7 * b;
+            elder.crane_light.g = 0.7 * b;
+            elder.crane_light.b = 1. * b;
         }
     }
 
@@ -49,11 +49,11 @@ impl Effect for TestA {
 #[derive(Clone, Copy)]
 pub struct ColorTest;
 impl Effect for ColorTest {
-    fn render(&mut self, target: &mut Vec<Pixel>, _time: Duration) {
-        for (_i, pixel) in target.iter_mut().enumerate() {
-            pixel.r = 0.7;
-            pixel.g = 0.7;
-            pixel.b = 1.;
+    fn render(&mut self, elders: &mut Vec<Elder>, _time: Duration) {
+        for (_i, elder) in elders.iter_mut().enumerate() {
+            elder.crane_light.r = 0.7;
+            elder.crane_light.g = 0.7;
+            elder.crane_light.b = 1.;
         }
     }
 
@@ -65,13 +65,13 @@ impl Effect for ColorTest {
 #[derive(Clone, Copy)]
 pub struct TestEffectA;
 impl Effect for TestEffectA {
-    fn render(&mut self, target: &mut Vec<Pixel>, time: Duration) {
-        let len = target.len();
+    fn render(&mut self, elders: &mut Vec<Elder>, time: Duration) {
+        let len = elders.len();
         let d = time.as_secs_f32();
-        for (i, pixel) in target.iter_mut().enumerate() {
+        for (i, elder) in elders.iter_mut().enumerate() {
             let x = ((d % PERIOD) / PERIOD + (i as f32) / len as f32) % 1.;
-            pixel.r = 1. - x;
-            pixel.b = x;
+            elder.crane_light.r = 1. - x;
+            elder.crane_light.b = x;
         }
     }
 
@@ -83,13 +83,13 @@ impl Effect for TestEffectA {
 #[derive(Clone, Copy)]
 pub struct TestEffectB;
 impl Effect for TestEffectB {
-    fn render(&mut self, target: &mut Vec<Pixel>, time: Duration) {
-        let len = target.len();
+    fn render(&mut self, elders: &mut Vec<Elder>, time: Duration) {
+        let len = elders.len();
         let d = time.as_secs_f32();
-        for (i, pixel) in target.iter_mut().enumerate() {
+        for (i, elder) in elders.iter_mut().enumerate() {
             let x = ((d % PERIOD) / PERIOD + (i as f32) / len as f32) % 1.;
-            pixel.g = 1. - x;
-            pixel.b = x;
+            elder.crane_light.g = 1. - x;
+            elder.crane_light.b = x;
         }
     }
 
@@ -101,13 +101,13 @@ impl Effect for TestEffectB {
 #[derive(Clone, Copy)]
 pub struct TestEffectC;
 impl Effect for TestEffectC {
-    fn render(&mut self, target: &mut Vec<Pixel>, time: Duration) {
-        let len = target.len();
+    fn render(&mut self, elders: &mut Vec<Elder>, time: Duration) {
+        let len = elders.len();
         let d = time.as_secs_f32();
-        for (i, pixel) in target.iter_mut().enumerate() {
+        for (i, elder) in elders.iter_mut().enumerate() {
             let x = ((d % PERIOD) / PERIOD + (i as f32) / len as f32) % 1.;
-            pixel.r = 1. - x;
-            pixel.g = x;
+            elder.crane_light.r = 1. - x;
+            elder.crane_light.g = x;
         }
     }
 
@@ -119,16 +119,16 @@ impl Effect for TestEffectC {
 #[derive(Clone, Copy)]
 pub struct TestEffectD;
 impl Effect for TestEffectD {
-    fn render(&mut self, target: &mut Vec<Pixel>, time: Duration) {
-        let len = target.len();
+    fn render(&mut self, elders: &mut Vec<Elder>, time: Duration) {
+        let len = elders.len();
         let d = time.as_secs_f32();
-        for (i, pixel) in target.iter_mut().enumerate() {
+        for (i, elder) in elders.iter_mut().enumerate() {
             let x = ((((d % PERIOD) / PERIOD + (i as f32) / len as f32) * std::f32::consts::TAU)
                 .sin()
                 + 1.)
                 / 2.;
-            pixel.r = 1. - x;
-            pixel.g = x;
+            elder.crane_light.r = 1. - x;
+            elder.crane_light.g = x;
         }
     }
 
@@ -140,13 +140,13 @@ impl Effect for TestEffectD {
 #[derive(Clone, Copy)]
 pub struct InitialTest;
 impl Effect for InitialTest {
-    fn render(&mut self, target: &mut Vec<Pixel>, time: Duration) {
-        let _len = target.len();
+    fn render(&mut self, elders: &mut Vec<Elder>, time: Duration) {
+        let _len = elders.len();
         let d = time.as_secs_f32();
-        for (_i, pixel) in target.iter_mut().enumerate() {
+        for (_i, elder) in elders.iter_mut().enumerate() {
             let x = ((((d % PERIOD) / PERIOD) * std::f32::consts::TAU).sin() + 1.) / 2.;
-            pixel.r = (1. - x) / 2.;
-            pixel.g = x;
+            elder.crane_light.r = (1. - x) / 2.;
+            elder.crane_light.g = x;
         }
     }
 
@@ -158,27 +158,27 @@ impl Effect for InitialTest {
 #[derive(Clone, Copy)]
 pub struct FadePairs;
 impl Effect for FadePairs {
-    fn render(&mut self, target: &mut Vec<Pixel>, time: Duration) {
-        let _len = target.len();
+    fn render(&mut self, elders: &mut Vec<Elder>, time: Duration) {
+        let _len = elders.len();
         let d = time.as_secs_f32();
         let p = 4.0;
-        for (i, pixel) in target.iter_mut().skip(60).take(10).enumerate() {
+        for (i, elder) in elders.iter_mut().skip(60).take(10).enumerate() {
             let lit_i = ((d % p / p) * 10.) as usize;
             let prog = ((d % p / p) * 10.) % 1.;
             let other = 1. - prog;
             let j = (lit_i + 1) % 10;
             if i == lit_i {
-                pixel.r = other * 0.7;
-                pixel.g = other * 0.7;
-                pixel.b = other * 1.;
+                elder.crane_light.r = other * 0.7;
+                elder.crane_light.g = other * 0.7;
+                elder.crane_light.b = other * 1.;
             } else if i == j {
-                pixel.r = prog * 0.7;
-                pixel.g = prog * 0.7;
-                pixel.b = prog * 1.;
+                elder.crane_light.r = prog * 0.7;
+                elder.crane_light.g = prog * 0.7;
+                elder.crane_light.b = prog * 1.;
             }
             // let x = ((d % PERIOD) / PERIOD + (i as f32) / len as f32) % 1.;
-            // pixel.r = 1. - x;
-            // pixel.b = x;
+            // elder.crane_light.r = 1. - x;
+            // elder.crane_light.b = x;
         }
     }
 

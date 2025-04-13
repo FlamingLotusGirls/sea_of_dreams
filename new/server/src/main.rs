@@ -77,7 +77,7 @@ fn main() -> iced::Result {
     }
 }
 
-// Since we only support one art-net universe (512B), 170 is the maximum number of pixels for now
+// Since we only support one art-net universe (512B), 170 is the maximum number of total pixels for now
 const ELDER_COUNT: usize = 9;
 const FRAME_OUTPUT_PERIOD: usize = 2;
 
@@ -134,7 +134,7 @@ impl App {
             App {
                 main_window_size: Size::new(0., 0.),
                 start: Instant::now(),
-                preview: preview::Preview::new(create_crane_lights(), create_poofers()),
+                preview: preview::Preview::new(create_elders()),
                 current_effect: 0,
                 output_socket: OutputSocket::new(),
                 all_effects: {
@@ -163,9 +163,9 @@ impl App {
             Message::Tick(now) => {
                 // Clear all pixels
                 for pixel in self.preview.0.iter_mut() {
-                    pixel.r = 0.;
-                    pixel.g = 0.;
-                    pixel.b = 0.;
+                    pixel.crane_light.r = 0.;
+                    pixel.crane_light.g = 0.;
+                    pixel.crane_light.b = 0.;
                 }
                 self.all_effects[self.current_effect].render(&mut self.preview.0, now - self.start);
 
@@ -227,6 +227,12 @@ impl App {
     }
 }
 
+#[derive(Clone, Debug)]
+pub struct Elder {
+    pub crane_light: Pixel,
+    pub poofer: Poofer,
+}
+
 #[derive(Copy, Clone, Debug)]
 pub struct Pixel {
     pub x: f32,
@@ -254,59 +260,43 @@ pub struct RelayAddress {
 /**
  * We use -1 to 1 for both X and Y axes.
  */
-fn create_crane_lights() -> Vec<Pixel> {
-    let mut pixels = Vec::with_capacity(ELDER_COUNT);
+fn create_elders() -> Vec<Elder> {
+    let mut elders = Vec::with_capacity(ELDER_COUNT);
 
     let starting_theta = -std::f32::consts::FRAC_PI_2;
-    let radius: f32 = 0.5;
+    let crane_light_radius: f32 = 0.5;
+    let poofer_radius: f32 = 0.6;
 
     let elder_count = ELDER_COUNT as f32;
     for i in 0..ELDER_COUNT {
-        let elder_theta = starting_theta + std::f32::consts::TAU * (i as f32) / elder_count;
-        pixels.push(Pixel {
-            x: elder_theta.cos() * radius,
-            y: elder_theta.sin() * radius,
-            r: 0.,
-            g: 0.,
-            b: 0.,
-        });
-    }
-
-    pixels
-}
-
-/**
- * We use -1 to 1 for both X and Y axes.
- */
-fn create_poofers() -> Vec<Poofer> {
-    let mut pixels = Vec::with_capacity(ELDER_COUNT);
-
-    let starting_theta = -std::f32::consts::FRAC_PI_2;
-    let radius: f32 = 0.6;
-
-    let elder_count = ELDER_COUNT as f32;
-    for i in 0..ELDER_COUNT {
-        let elder_theta = starting_theta + std::f32::consts::TAU * (i as f32) / elder_count;
         let i_u8 = i as u8;
-        pixels.push(Poofer {
-            x: elder_theta.cos() * radius,
-            y: elder_theta.sin() * radius,
-            on: false,
-            // We will start out poofers in pairs for each elder
-            relays: vec![
-                RelayAddress {
-                    board_address: 1 + i_u8 / 3,
-                    poofer_address: 2 * (i_u8 % 3) + 1,
-                },
-                RelayAddress {
-                    board_address: 1 + i_u8 / 3,
-                    poofer_address: 2 * (i_u8 % 3) + 2,
-                },
-            ],
+        let elder_theta = starting_theta + std::f32::consts::TAU * (i as f32) / elder_count;
+        elders.push(Elder {
+            crane_light: Pixel {
+                x: elder_theta.cos() * crane_light_radius,
+                y: elder_theta.sin() * crane_light_radius,
+                r: 0.,
+                g: 0.,
+                b: 0.,
+            },
+            poofer: Poofer {
+                x: elder_theta.cos() * poofer_radius,
+                y: elder_theta.sin() * poofer_radius,
+                on: false,
+                // We will start out poofers in pairs for each elder
+                relays: vec![
+                    RelayAddress {
+                        board_address: 1 + i_u8 / 3,
+                        poofer_address: 2 * (i_u8 % 3) + 1,
+                    },
+                    RelayAddress {
+                        board_address: 1 + i_u8 / 3,
+                        poofer_address: 2 * (i_u8 % 3) + 2,
+                    },
+                ],
+            },
         });
     }
 
-    println!("{pixels:#?}");
-
-    pixels
+    elders
 }

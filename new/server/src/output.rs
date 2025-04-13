@@ -2,7 +2,7 @@ use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4, UdpSocket};
 
 use artnet_protocol::{ArtCommand, Output};
 
-use crate::Pixel;
+use crate::Elder;
 
 const MY_IP: &str = "0.0.0.0:6454";
 const TARGET_ADDRESS: SocketAddr =
@@ -18,16 +18,16 @@ impl OutputSocket {
         Self { socket }
     }
 
-    pub fn output(&self, pixels: &Vec<Pixel>) {
+    pub fn output(&self, elders: &Vec<Elder>) {
         let command = ArtCommand::Output(Output {
             data: {
-                pixels
+                elders
                     .iter()
-                    .flat_map(|pixel| {
+                    .flat_map(|elder| {
                         [
-                            GAMMA[(pixel.r * 255.) as usize],
-                            GAMMA[(pixel.g * 255.) as usize],
-                            GAMMA[(pixel.b * 255.) as usize],
+                            GAMMA[(elder.crane_light.r * 255.) as usize],
+                            GAMMA[(elder.crane_light.g * 255.) as usize],
+                            GAMMA[(elder.crane_light.b * 255.) as usize],
                         ]
                     })
                     .collect::<Vec<u8>>()
