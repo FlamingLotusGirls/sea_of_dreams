@@ -134,7 +134,7 @@ impl App {
             App {
                 main_window_size: Size::new(0., 0.),
                 start: Instant::now(),
-                preview: preview::Preview::new(create_crane_lights()),
+                preview: preview::Preview::new(create_crane_lights(), create_poofers()),
                 current_effect: 0,
                 output_socket: OutputSocket::new(),
                 all_effects: {
@@ -236,6 +236,13 @@ pub struct Pixel {
     pub b: f32,
 }
 
+#[derive(Copy, Clone, Debug)]
+pub struct Poofer {
+    pub x: f32,
+    pub y: f32,
+    pub on: bool,
+}
+
 /**
  * We use -1 to 1 for both X and Y axes.
  */
@@ -254,6 +261,28 @@ fn create_crane_lights() -> Vec<Pixel> {
             r: 0.,
             g: 0.,
             b: 0.,
+        });
+    }
+
+    pixels
+}
+
+/**
+ * We use -1 to 1 for both X and Y axes.
+ */
+fn create_poofers() -> Vec<Poofer> {
+    let mut pixels = Vec::with_capacity(ELDER_COUNT);
+
+    let starting_theta = -std::f32::consts::FRAC_PI_2;
+    let radius: f32 = 0.6;
+
+    let elder_count = ELDER_COUNT as f32;
+    for i in 0..ELDER_COUNT {
+        let elder_theta = starting_theta + std::f32::consts::TAU * (i as f32) / elder_count;
+        pixels.push(Poofer {
+            x: elder_theta.cos() * radius,
+            y: elder_theta.sin() * radius,
+            on: false,
         });
     }
 
