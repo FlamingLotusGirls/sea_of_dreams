@@ -1,6 +1,6 @@
+mod artnet_output_socket;
 mod effects;
-mod output_artnet;
-mod output_poofer_bus;
+mod poofer_bus_port;
 mod preview;
 
 use iced::{
@@ -9,8 +9,8 @@ use iced::{
 };
 use std::time::{Duration, Instant};
 
+use artnet_output_socket::ArtnetOutputSocket;
 use effects::{Effect, get_effect};
-use output_artnet::OutputArtnetSocket;
 
 // Since we only support one art-net universe (512B), 170 is the maximum number of total pixels for now
 const ELDER_COUNT: usize = 9;
@@ -38,7 +38,7 @@ struct App {
     start: Instant,
     preview: preview::Preview,
     current_effect: usize,
-    output_socket: OutputArtnetSocket,
+    artnet_socket: ArtnetOutputSocket,
     all_effects: Vec<Box<dyn Effect>>,
     output_enabled: bool,
     output_frame_count: usize,
@@ -61,7 +61,7 @@ impl App {
                 start: Instant::now(),
                 preview: preview::Preview::new(create_elders()),
                 current_effect: 0,
-                output_socket: OutputArtnetSocket::new(),
+                artnet_socket: ArtnetOutputSocket::new(),
                 all_effects: {
                     let mut effects: Vec<Box<dyn Effect>> = vec![];
                     let mut i = 0;
@@ -96,7 +96,7 @@ impl App {
 
                 if self.output_enabled {
                     if self.output_frame_count == 0 {
-                        self.output_socket.output(&self.preview.0);
+                        self.artnet_socket.output(&self.preview.0);
                     }
                     self.output_frame_count = (self.output_frame_count + 1) % FRAME_OUTPUT_PERIOD;
                 }
