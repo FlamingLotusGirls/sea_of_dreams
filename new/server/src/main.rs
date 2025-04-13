@@ -236,11 +236,19 @@ pub struct Pixel {
     pub b: f32,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct Poofer {
     pub x: f32,
     pub y: f32,
     pub on: bool,
+    /// Multiple solenoids / relays which always will poof together
+    pub relays: Vec<RelayAddress>,
+}
+
+#[derive(Clone, Debug)]
+pub struct RelayAddress {
+    pub board_address: u8,
+    pub poofer_address: u8,
 }
 
 /**
@@ -279,12 +287,26 @@ fn create_poofers() -> Vec<Poofer> {
     let elder_count = ELDER_COUNT as f32;
     for i in 0..ELDER_COUNT {
         let elder_theta = starting_theta + std::f32::consts::TAU * (i as f32) / elder_count;
+        let i_u8 = i as u8;
         pixels.push(Poofer {
             x: elder_theta.cos() * radius,
             y: elder_theta.sin() * radius,
             on: false,
+            // We will start out poofers in pairs for each elder
+            relays: vec![
+                RelayAddress {
+                    board_address: 1 + i_u8 / 3,
+                    poofer_address: 2 * (i_u8 % 3) + 1,
+                },
+                RelayAddress {
+                    board_address: 1 + i_u8 / 3,
+                    poofer_address: 2 * (i_u8 % 3) + 2,
+                },
+            ],
         });
     }
+
+    println!("{pixels:#?}");
 
     pixels
 }
