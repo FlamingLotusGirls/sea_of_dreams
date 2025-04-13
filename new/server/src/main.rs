@@ -7,6 +7,7 @@ use iced::{
     ContentFit, Element, Length, Settings, Size, Subscription, Task, Theme, application, time,
     window,
 };
+use poofer_bus_port::PooferBusPort;
 use std::time::{Duration, Instant};
 
 use artnet_output_socket::ArtnetOutputSocket;
@@ -42,6 +43,8 @@ struct App {
     all_effects: Vec<Box<dyn Effect>>,
     output_enabled: bool,
     output_frame_count: usize,
+    available_serial_ports: Vec<String>,
+    poofer_port: Option<PooferBusPort>,
 }
 
 #[allow(clippy::enum_variant_names)]
@@ -52,6 +55,7 @@ enum Message {
     Tick(Instant),
     PressOutput,
     SelectEffect(usize),
+    SelectSerialPort(String),
 }
 impl App {
     fn new() -> (Self, Task<Message>) {
@@ -73,6 +77,8 @@ impl App {
                 },
                 output_enabled: true,
                 output_frame_count: 0,
+                available_serial_ports: PooferBusPort::available_ports(),
+                poofer_port: None,
             },
             window::get_latest()
                 .and_then(window::get_size)
@@ -113,6 +119,10 @@ impl App {
                 self.current_effect = i;
                 Task::none()
             }
+            Message::SelectSerialPort(port_name) => {
+                self.poofer_port = Some(PooferBusPort::new(&port_name));
+                Task::none()
+            }
         }
     }
 
@@ -129,17 +139,24 @@ impl App {
                     .on_press(Message::SelectEffect(i)))
                 .into()
             ))),
-            container(responsive(move |bounds| {
-                let Size { width, height } = ContentFit::Contain.fit(Size::new(1., 1.), bounds);
-                center(
-                    canvas(&self.preview)
-                        .width(Length::Fixed(width))
-                        .height(Length::Fixed(height)),
-                )
-                .into()
-            }))
-            .width(Length::Fill)
-            .height(Length::Fill),
+            row![
+                column(self.available_serial_ports.iter().map(|port_name| {
+                    button(text(port_name))
+                        .on_press(Message::SelectSerialPort(port_name.clone()))
+                        .into()
+                })),
+                container(responsive(move |bounds| {
+                    let Size { width, height } = ContentFit::Contain.fit(Size::new(1., 1.), bounds);
+                    center(
+                        canvas(&self.preview)
+                            .width(Length::Fixed(width))
+                            .height(Length::Fixed(height)),
+                    )
+                    .into()
+                }))
+                .width(Length::Fill)
+                .height(Length::Fill),
+            ],
             checkbox("Output", self.output_enabled).on_toggle(|_| { Message::PressOutput }),
         ])
         .width(Length::Fill)

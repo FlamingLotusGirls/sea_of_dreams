@@ -50,7 +50,7 @@ impl PooferBusPort {
                             }
                         }
                         if matches!(port.port_type, SerialPortType::UsbPort(_)) {
-                            Some("a".to_string())
+                            Some(port.port_name.clone())
                         } else {
                             None
                         }
