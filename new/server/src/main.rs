@@ -37,6 +37,7 @@ fn main() -> iced::Result {
 struct App {
     main_window_size: Size,
     start: Instant,
+    effect_start: Instant,
     preview: preview::Preview,
     current_effect: usize,
     artnet_socket: ArtnetOutputSocket,
@@ -65,6 +66,7 @@ impl App {
             App {
                 main_window_size: Size::new(0., 0.),
                 start: Instant::now(),
+                effect_start: Instant::now(),
                 preview: preview::Preview::new(create_elders()),
                 current_effect: 0,
                 artnet_socket: ArtnetOutputSocket::new(),
@@ -101,7 +103,11 @@ impl App {
                     pixel.crane_light.g = 0.;
                     pixel.crane_light.b = 0.;
                 }
-                self.all_effects[self.current_effect].render(&mut self.preview.0, now - self.start);
+                self.all_effects[self.current_effect].render(
+                    &mut self.preview.0,
+                    now - self.start,
+                    now - self.effect_start,
+                );
 
                 if self.artnet_output_enabled {
                     if self.artnet_output_frame_count == 0 {
@@ -131,6 +137,7 @@ impl App {
             }
             Message::SelectEffect(i) => {
                 self.current_effect = i;
+                self.effect_start = Instant::now();
                 Task::none()
             }
             Message::SelectSerialPort(port_name) => {
