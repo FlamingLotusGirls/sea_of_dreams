@@ -213,7 +213,7 @@ pub struct Poofer {
     pub x: f32,
     pub y: f32,
     pub on: bool,
-    pub changed: bool,
+    pub needs_to_send_command: bool,
     /// Multiple solenoids / relays which always will poof together
     pub relays: Vec<RelayAddress>,
 }
@@ -222,11 +222,11 @@ impl Poofer {
         match (self.on, new_value_of_on) {
             (true, false) => {
                 self.on = false;
-                self.changed = true;
+                self.needs_to_send_command = true;
             }
             (false, true) => {
                 self.on = true;
-                self.changed = true;
+                self.needs_to_send_command = true;
             }
             _ => {}
         }
@@ -270,7 +270,7 @@ fn create_elders() -> Vec<Elder> {
                 x: elder_theta.cos() * poofer_radius,
                 y: elder_theta.sin() * poofer_radius,
                 on: false,
-                changed: false,
+                needs_to_send_command: false,
                 // We will start out poofers in pairs for each elder
                 relays: vec![
                     RelayAddress {

@@ -4,11 +4,7 @@ use crate::{ELDER_COUNT, Elder};
 
 pub trait Effect {
     fn name(&self) -> String;
-    /**
-     * time: time since program start
-     * effect_time: time since effect was activated
-     */
-    fn render(&mut self, elders: &mut Vec<Elder>, time: Duration, effect_time: Duration);
+    fn render(&mut self, elders: &mut Vec<Elder>, program_time: Duration, effect_time: Duration);
 }
 
 pub fn get_effect(i: usize) -> Option<Box<dyn Effect>> {
@@ -31,7 +27,7 @@ const PERIOD: f32 = 2.37;
 #[derive(Clone, Copy)]
 pub struct AllPoof;
 impl Effect for AllPoof {
-    fn render(&mut self, elders: &mut Vec<Elder>, _time: Duration, effect_time: Duration) {
+    fn render(&mut self, elders: &mut Vec<Elder>, _program_time: Duration, effect_time: Duration) {
         let d = effect_time.as_secs_f32();
 
         for elder in elders.iter_mut() {
@@ -51,8 +47,8 @@ impl Effect for AllPoof {
 #[derive(Clone, Copy)]
 pub struct PoofRing;
 impl Effect for PoofRing {
-    fn render(&mut self, elders: &mut Vec<Elder>, time: Duration, _effect_time: Duration) {
-        let d = time.as_secs_f32();
+    fn render(&mut self, elders: &mut Vec<Elder>, program_time: Duration, _effect_time: Duration) {
+        let d = program_time.as_secs_f32();
 
         let poof_index = (d * 2.0) as usize % ELDER_COUNT;
         for (i, elder) in elders.iter_mut().enumerate() {
@@ -72,8 +68,8 @@ impl Effect for PoofRing {
 #[derive(Clone, Copy)]
 pub struct DefaultEffect;
 impl Effect for DefaultEffect {
-    fn render(&mut self, elders: &mut Vec<Elder>, time: Duration, _effect_time: Duration) {
-        let d = time.as_secs_f32();
+    fn render(&mut self, elders: &mut Vec<Elder>, program_time: Duration, _effect_time: Duration) {
+        let d = program_time.as_secs_f32();
         // let p = 4.0;
         // let prog = ((d % p / p) * 10.);
         let prog = d.sin() * 10.0;
@@ -96,7 +92,7 @@ impl Effect for DefaultEffect {
 #[derive(Clone, Copy)]
 pub struct SolidEffect;
 impl Effect for SolidEffect {
-    fn render(&mut self, elders: &mut Vec<Elder>, _time: Duration, _effect_time: Duration) {
+    fn render(&mut self, elders: &mut Vec<Elder>, _program_time: Duration, _effect_time: Duration) {
         for (_i, elder) in elders.iter_mut().enumerate() {
             elder.crane_light.r = 0.7;
             elder.crane_light.g = 0.7;
@@ -112,9 +108,9 @@ impl Effect for SolidEffect {
 #[derive(Clone, Copy)]
 pub struct TestEffectA;
 impl Effect for TestEffectA {
-    fn render(&mut self, elders: &mut Vec<Elder>, time: Duration, _effect_time: Duration) {
+    fn render(&mut self, elders: &mut Vec<Elder>, program_time: Duration, _effect_time: Duration) {
         let len = elders.len();
-        let d = time.as_secs_f32();
+        let d = program_time.as_secs_f32();
         for (i, elder) in elders.iter_mut().enumerate() {
             let x = ((d % PERIOD) / PERIOD + (i as f32) / len as f32) % 1.;
             elder.crane_light.r = 1. - x;
@@ -130,9 +126,9 @@ impl Effect for TestEffectA {
 #[derive(Clone, Copy)]
 pub struct TestEffectB;
 impl Effect for TestEffectB {
-    fn render(&mut self, elders: &mut Vec<Elder>, time: Duration, _effect_time: Duration) {
+    fn render(&mut self, elders: &mut Vec<Elder>, program_time: Duration, _effect_time: Duration) {
         let len = elders.len();
-        let d = time.as_secs_f32();
+        let d = program_time.as_secs_f32();
         for (i, elder) in elders.iter_mut().enumerate() {
             let x = ((d % PERIOD) / PERIOD + (i as f32) / len as f32) % 1.;
             elder.crane_light.g = 1. - x;
@@ -148,9 +144,9 @@ impl Effect for TestEffectB {
 #[derive(Clone, Copy)]
 pub struct TestEffectC;
 impl Effect for TestEffectC {
-    fn render(&mut self, elders: &mut Vec<Elder>, time: Duration, _effect_time: Duration) {
+    fn render(&mut self, elders: &mut Vec<Elder>, program_time: Duration, _effect_time: Duration) {
         let len = elders.len();
-        let d = time.as_secs_f32();
+        let d = program_time.as_secs_f32();
         for (i, elder) in elders.iter_mut().enumerate() {
             let x = ((d % PERIOD) / PERIOD + (i as f32) / len as f32) % 1.;
             elder.crane_light.r = 1. - x;
@@ -166,9 +162,9 @@ impl Effect for TestEffectC {
 #[derive(Clone, Copy)]
 pub struct TestEffectD;
 impl Effect for TestEffectD {
-    fn render(&mut self, elders: &mut Vec<Elder>, time: Duration, _effect_time: Duration) {
+    fn render(&mut self, elders: &mut Vec<Elder>, program_time: Duration, _effect_time: Duration) {
         let len = elders.len();
-        let d = time.as_secs_f32();
+        let d = program_time.as_secs_f32();
         for (i, elder) in elders.iter_mut().enumerate() {
             let x = ((((d % PERIOD) / PERIOD + (i as f32) / len as f32) * std::f32::consts::TAU)
                 .sin()
@@ -187,9 +183,9 @@ impl Effect for TestEffectD {
 #[derive(Clone, Copy)]
 pub struct InitialTest;
 impl Effect for InitialTest {
-    fn render(&mut self, elders: &mut Vec<Elder>, time: Duration, _effect_time: Duration) {
+    fn render(&mut self, elders: &mut Vec<Elder>, program_time: Duration, _effect_time: Duration) {
         let _len = elders.len();
-        let d = time.as_secs_f32();
+        let d = program_time.as_secs_f32();
         for (_i, elder) in elders.iter_mut().enumerate() {
             let x = ((((d % PERIOD) / PERIOD) * std::f32::consts::TAU).sin() + 1.) / 2.;
             elder.crane_light.r = (1. - x) / 2.;
@@ -205,9 +201,9 @@ impl Effect for InitialTest {
 #[derive(Clone, Copy)]
 pub struct FadePairs;
 impl Effect for FadePairs {
-    fn render(&mut self, elders: &mut Vec<Elder>, time: Duration, _effect_time: Duration) {
+    fn render(&mut self, elders: &mut Vec<Elder>, program_time: Duration, _effect_time: Duration) {
         let _len = elders.len();
-        let d = time.as_secs_f32();
+        let d = program_time.as_secs_f32();
         let p = 4.0;
         for (i, elder) in elders.iter_mut().skip(60).take(10).enumerate() {
             let lit_i = ((d % p / p) * 10.) as usize;

@@ -93,7 +93,7 @@ impl PooferBusPort {
 
     pub fn output(&self, elders: &mut Vec<Elder>) {
         for elder in elders {
-            if elder.poofer.changed {
+            if elder.poofer.needs_to_send_command {
                 let on_digit = elder.poofer.on as u8;
                 for RelayAddress {
                     board_address,
@@ -103,7 +103,7 @@ impl PooferBusPort {
                     let command = format!("!{board_address:02}{poofer_address}{on_digit}.");
                     self.port_channel_sender.send(command).unwrap();
                 }
-                elder.poofer.changed = false;
+                elder.poofer.needs_to_send_command = false;
             }
         }
     }
