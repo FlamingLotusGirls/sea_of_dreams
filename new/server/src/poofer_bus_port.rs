@@ -1,9 +1,12 @@
 use crate::{Elder, RelayAddress};
-use serialport::{DataBits, SerialPort, SerialPortType, StopBits};
-use std::io::Write as _;
+use serialport::{DataBits, SerialPortType, StopBits};
+use std::{
+    io::Write as _,
+    sync::mpsc::{Sender, channel},
+};
 
 pub struct PooferBusPort {
-    port: Box<dyn SerialPort>,
+    port_channel_sender: Sender<String>,
 }
 impl PooferBusPort {
     pub fn available_ports() -> Vec<String> {
@@ -60,19 +63,35 @@ impl PooferBusPort {
         }
     }
     pub fn new(serial_port_name: &str) -> Self {
-        let port = serialport::new(serial_port_name, 19200)
-            .stop_bits(StopBits::One)
-            .data_bits(DataBits::Eight)
-            .open()
-            .unwrap_or_else(|e| {
-                eprintln!("Failed to open port {}. Error: {}", serial_port_name, e);
-                ::std::process::exit(1);
-            });
+        let serial_port_name = serial_port_name.to_string();
+        let (port_channel_sender, port_channel_receiver) = channel();
+        std::thread::spawn(move || {
+            let mut port = serialport::new(serial_port_name.clone(), 19200)
+                .stop_bits(StopBits::One)
+                .data_bits(DataBits::Eight)
+                .open()
+                .unwrap_or_else(|e| {
+                    eprintln!("Failed to open port {}. Error: {}", serial_port_name, e);
+                    ::std::process::exit(1);
+                });
+            loop {
+                let command: String = port_channel_receiver.recv().unwrap();
+                match port.write(command.as_bytes()) {
+                    Ok(_) => {
+                        print!("{}", command);
+                        std::io::stdout().flush().unwrap();
+                    }
+                    Err(e) => eprintln!("{e:?}"),
+                }
+            }
+        });
 
-        Self { port }
+        Self {
+            port_channel_sender,
+        }
     }
 
-    pub fn output(&mut self, elders: &Vec<Elder>) {
+    pub fn output(&self, elders: &Vec<Elder>) {
         for elder in elders {
             let on_digit = elder.poofer.on as u8;
             for RelayAddress {
@@ -81,13 +100,7 @@ impl PooferBusPort {
             } in &elder.poofer.relays
             {
                 let command = format!("!{board_address:02}{poofer_address}{on_digit}.");
-                match self.port.write(command.as_bytes()) {
-                    Ok(_) => {
-                        print!("{}", command);
-                        std::io::stdout().flush().unwrap();
-                    }
-                    Err(e) => eprintln!("{e:?}"),
-                }
+                self.port_channel_sender.send(command).unwrap();
             }
         }
         println!();
