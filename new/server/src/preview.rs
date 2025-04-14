@@ -46,11 +46,11 @@ impl<Message> canvas::Program<Message> for Preview {
                 );
                 frame.fill_rectangle(
                     Point::new(
-                        bounds.width / 2. + elder.poofer.x * bounds.width / 2.,
-                        bounds.height / 2. + elder.poofer.y * bounds.height / 2.,
+                        bounds.width / 2. + elder.poofer_both.x * bounds.width / 2.,
+                        bounds.height / 2. + elder.poofer_both.y * bounds.height / 2.,
                     ),
                     Size::new(6., 6.),
-                    if elder.poofer.on {
+                    if elder.poofer_both.on || elder.poofer_wide.on || elder.poofer_narrow.on {
                         Color::from_rgba8(235, 225, 52, 1.)
                     } else {
                         Color::new(0., 0., 0., 1.)

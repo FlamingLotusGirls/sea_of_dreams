@@ -196,7 +196,9 @@ impl App {
 #[derive(Clone, Debug)]
 pub struct Elder {
     pub crane_light: Pixel,
-    pub poofer: Poofer,
+    pub poofer_both: Poofer,
+    pub poofer_wide: Poofer,
+    pub poofer_narrow: Poofer,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -266,12 +268,12 @@ fn create_elders() -> Vec<Elder> {
                 g: 0.,
                 b: 0.,
             },
-            poofer: Poofer {
+            poofer_both: Poofer {
                 x: elder_theta.cos() * poofer_radius,
                 y: elder_theta.sin() * poofer_radius,
                 on: false,
                 needs_to_send_command: false,
-                // We will start out poofers in pairs for each elder
+                // Poof all relays for this elder
                 relays: vec![
                     RelayAddress {
                         board_address: 1 + i_u8 / 3,
@@ -282,6 +284,28 @@ fn create_elders() -> Vec<Elder> {
                         poofer_address: 2 * (i_u8 % 3) + 2,
                     },
                 ],
+            },
+            poofer_wide: Poofer {
+                x: elder_theta.cos() * poofer_radius,
+                y: elder_theta.sin() * poofer_radius,
+                on: false,
+                needs_to_send_command: false,
+                // Poof the relays that control the wide-pointing nozzles
+                relays: vec![RelayAddress {
+                    board_address: 1 + i_u8 / 3,
+                    poofer_address: 2 * (i_u8 % 3) + 1,
+                }],
+            },
+            poofer_narrow: Poofer {
+                x: elder_theta.cos() * poofer_radius,
+                y: elder_theta.sin() * poofer_radius,
+                on: false,
+                needs_to_send_command: false,
+                // Poof the relays that control the narrow-pointing nozzles
+                relays: vec![RelayAddress {
+                    board_address: 1 + i_u8 / 3,
+                    poofer_address: 2 * (i_u8 % 3) + 2,
+                }],
             },
         });
     }

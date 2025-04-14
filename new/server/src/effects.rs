@@ -18,11 +18,55 @@ pub fn get_effect(i: usize) -> Option<Box<dyn Effect>> {
         6 => Some(Box::new(FadePairs)),
         7 => Some(Box::new(SolidEffect)),
         8 => Some(Box::new(PoofRing)),
-        9 => Some(Box::new(AllPoof)),
+        9 => Some(Box::new(PoofRingWide)),
+        10 => Some(Box::new(PoofRingNarrow)),
+        11 => Some(Box::new(AllPoof)),
+        12 => Some(Box::new(AllPoofWide)),
+        13 => Some(Box::new(AllPoofNarrow)),
         _ => None,
     }
 }
 const PERIOD: f32 = 2.37;
+
+#[derive(Clone, Copy)]
+pub struct AllPoofNarrow;
+impl Effect for AllPoofNarrow {
+    fn render(&mut self, elders: &mut Vec<Elder>, _program_time: Duration, effect_time: Duration) {
+        let d = effect_time.as_secs_f32();
+
+        for elder in elders.iter_mut() {
+            if d < 0.3 {
+                elder.poofer_narrow.poof(true);
+            } else {
+                elder.poofer_narrow.poof(false);
+            }
+        }
+    }
+
+    fn name(&self) -> String {
+        "All Poof Narrow".into()
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct AllPoofWide;
+impl Effect for AllPoofWide {
+    fn render(&mut self, elders: &mut Vec<Elder>, _program_time: Duration, effect_time: Duration) {
+        let d = effect_time.as_secs_f32();
+
+        for elder in elders.iter_mut() {
+            if d < 0.3 {
+                elder.poofer_wide.poof(true);
+            } else {
+                elder.poofer_wide.poof(false);
+            }
+        }
+    }
+
+    fn name(&self) -> String {
+        "All Poof Wide".into()
+    }
+}
 
 #[derive(Clone, Copy)]
 pub struct AllPoof;
@@ -32,15 +76,57 @@ impl Effect for AllPoof {
 
         for elder in elders.iter_mut() {
             if d < 0.3 {
-                elder.poofer.poof(true);
+                elder.poofer_both.poof(true);
             } else {
-                elder.poofer.poof(false);
+                elder.poofer_both.poof(false);
             }
         }
     }
 
     fn name(&self) -> String {
         "All Poof".into()
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct PoofRingNarrow;
+impl Effect for PoofRingNarrow {
+    fn render(&mut self, elders: &mut Vec<Elder>, program_time: Duration, _effect_time: Duration) {
+        let d = program_time.as_secs_f32();
+
+        let poof_index = (d * 2.0) as usize % ELDER_COUNT;
+        for (i, elder) in elders.iter_mut().enumerate() {
+            if i == poof_index {
+                elder.poofer_narrow.poof(true);
+            } else {
+                elder.poofer_narrow.poof(false);
+            }
+        }
+    }
+
+    fn name(&self) -> String {
+        "Poof Ring Narrow".into()
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct PoofRingWide;
+impl Effect for PoofRingWide {
+    fn render(&mut self, elders: &mut Vec<Elder>, program_time: Duration, _effect_time: Duration) {
+        let d = program_time.as_secs_f32();
+
+        let poof_index = (d * 2.0) as usize % ELDER_COUNT;
+        for (i, elder) in elders.iter_mut().enumerate() {
+            if i == poof_index {
+                elder.poofer_wide.poof(true);
+            } else {
+                elder.poofer_wide.poof(false);
+            }
+        }
+    }
+
+    fn name(&self) -> String {
+        "Poof Ring Wide".into()
     }
 }
 
@@ -53,9 +139,9 @@ impl Effect for PoofRing {
         let poof_index = (d * 2.0) as usize % ELDER_COUNT;
         for (i, elder) in elders.iter_mut().enumerate() {
             if i == poof_index {
-                elder.poofer.poof(true);
+                elder.poofer_both.poof(true);
             } else {
-                elder.poofer.poof(false);
+                elder.poofer_both.poof(false);
             }
         }
     }

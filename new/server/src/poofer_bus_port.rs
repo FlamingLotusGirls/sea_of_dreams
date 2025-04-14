@@ -93,17 +93,41 @@ impl PooferBusPort {
 
     pub fn output(&self, elders: &mut Vec<Elder>) {
         for elder in elders {
-            if elder.poofer.needs_to_send_command {
-                let on_digit = elder.poofer.on as u8;
+            if elder.poofer_both.needs_to_send_command {
+                let on_digit = elder.poofer_both.on as u8;
                 for RelayAddress {
                     board_address,
                     poofer_address,
-                } in &elder.poofer.relays
+                } in &elder.poofer_both.relays
                 {
                     let command = format!("!{board_address:02}{poofer_address}{on_digit}.");
                     self.port_channel_sender.send(command).unwrap();
                 }
-                elder.poofer.needs_to_send_command = false;
+                elder.poofer_both.needs_to_send_command = false;
+            }
+            if elder.poofer_wide.needs_to_send_command {
+                let on_digit = elder.poofer_wide.on as u8;
+                for RelayAddress {
+                    board_address,
+                    poofer_address,
+                } in &elder.poofer_wide.relays
+                {
+                    let command = format!("!{board_address:02}{poofer_address}{on_digit}.");
+                    self.port_channel_sender.send(command).unwrap();
+                }
+                elder.poofer_wide.needs_to_send_command = false;
+            }
+            if elder.poofer_narrow.needs_to_send_command {
+                let on_digit = elder.poofer_narrow.on as u8;
+                for RelayAddress {
+                    board_address,
+                    poofer_address,
+                } in &elder.poofer_narrow.relays
+                {
+                    let command = format!("!{board_address:02}{poofer_address}{on_digit}.");
+                    self.port_channel_sender.send(command).unwrap();
+                }
+                elder.poofer_narrow.needs_to_send_command = false;
             }
         }
     }
