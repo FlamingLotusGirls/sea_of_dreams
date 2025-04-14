@@ -78,7 +78,7 @@ impl PooferBusPort {
                 let command: String = port_channel_receiver.recv().unwrap();
                 match port.write(command.as_bytes()) {
                     Ok(_) => {
-                        print!("{}", command);
+                        println!("{}", command);
                         std::io::stdout().flush().unwrap();
                     }
                     Err(e) => eprintln!("{e:?}"),
@@ -91,18 +91,20 @@ impl PooferBusPort {
         }
     }
 
-    pub fn output(&self, elders: &Vec<Elder>) {
+    pub fn output(&self, elders: &mut Vec<Elder>) {
         for elder in elders {
-            let on_digit = elder.poofer.on as u8;
-            for RelayAddress {
-                board_address,
-                poofer_address,
-            } in &elder.poofer.relays
-            {
-                let command = format!("!{board_address:02}{poofer_address}{on_digit}.");
-                self.port_channel_sender.send(command).unwrap();
+            if elder.poofer.changed {
+                let on_digit = elder.poofer.on as u8;
+                for RelayAddress {
+                    board_address,
+                    poofer_address,
+                } in &elder.poofer.relays
+                {
+                    let command = format!("!{board_address:02}{poofer_address}{on_digit}.");
+                    self.port_channel_sender.send(command).unwrap();
+                }
+                elder.poofer.changed = false;
             }
         }
-        println!();
     }
 }

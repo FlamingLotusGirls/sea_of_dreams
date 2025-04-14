@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use crate::Elder;
+use crate::{ELDER_COUNT, Elder};
 
 pub trait Effect {
     fn name(&self) -> String;
@@ -9,22 +9,44 @@ pub trait Effect {
 
 pub fn get_effect(i: usize) -> Option<Box<dyn Effect>> {
     match i {
-        0 => Some(Box::new(TestA)),
+        0 => Some(Box::new(PoofRing)),
         1 => Some(Box::new(TestEffectA)),
         2 => Some(Box::new(TestEffectB)),
         3 => Some(Box::new(TestEffectC)),
         4 => Some(Box::new(TestEffectD)),
         5 => Some(Box::new(InitialTest)),
         6 => Some(Box::new(FadePairs)),
-        7 => Some(Box::new(ColorTest)),
+        7 => Some(Box::new(SolidEffect)),
+        8 => Some(Box::new(DefaultEffect)),
         _ => None,
     }
 }
 const PERIOD: f32 = 2.37;
 
 #[derive(Clone, Copy)]
-pub struct TestA;
-impl Effect for TestA {
+pub struct PoofRing;
+impl Effect for PoofRing {
+    fn render(&mut self, elders: &mut Vec<Elder>, time: Duration) {
+        let d = time.as_secs_f32();
+
+        let poof_index = (d * 2.0) as usize % ELDER_COUNT;
+        for (i, elder) in elders.iter_mut().enumerate() {
+            if i == poof_index {
+                elder.poofer.poof(true);
+            } else {
+                elder.poofer.poof(false);
+            }
+        }
+    }
+
+    fn name(&self) -> String {
+        "Poof Ring".into()
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct DefaultEffect;
+impl Effect for DefaultEffect {
     fn render(&mut self, elders: &mut Vec<Elder>, time: Duration) {
         let d = time.as_secs_f32();
         // let p = 4.0;
@@ -42,13 +64,13 @@ impl Effect for TestA {
     }
 
     fn name(&self) -> String {
-        "AA".into()
+        "Default".into()
     }
 }
 
 #[derive(Clone, Copy)]
-pub struct ColorTest;
-impl Effect for ColorTest {
+pub struct SolidEffect;
+impl Effect for SolidEffect {
     fn render(&mut self, elders: &mut Vec<Elder>, _time: Duration) {
         for (_i, elder) in elders.iter_mut().enumerate() {
             elder.crane_light.r = 0.7;

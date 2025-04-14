@@ -16,7 +16,6 @@ use effects::{Effect, get_effect};
 // Since we only support one art-net universe (512B), 170 is the maximum number of total pixels for now
 const ELDER_COUNT: usize = 9;
 const ARTNET_FRAME_OUTPUT_PERIOD: usize = 2;
-const POOFER_FRAME_OUTPUT_PERIOD: usize = 10;
 
 fn main() -> iced::Result {
     application("Haven Server", App::update, App::view)
@@ -45,7 +44,6 @@ struct App {
     artnet_output_enabled: bool,
     poofer_output_enabled: bool,
     artnet_output_frame_count: usize,
-    poofer_output_frame_count: usize,
     available_serial_ports: Vec<String>,
     poofer_port: Option<PooferBusPort>,
 }
@@ -82,7 +80,6 @@ impl App {
                 artnet_output_enabled: true,
                 poofer_output_enabled: false,
                 artnet_output_frame_count: 0,
-                poofer_output_frame_count: 0,
                 available_serial_ports: PooferBusPort::available_ports(),
                 poofer_port: None,
             },
@@ -116,10 +113,8 @@ impl App {
 
                 if let Some(poofer_port) = &mut self.poofer_port {
                     if self.poofer_output_enabled {
-                        poofer_port.output(&self.preview.0);
+                        poofer_port.output(&mut self.preview.0);
                     }
-                    self.poofer_output_frame_count =
-                        (self.poofer_output_frame_count + 1) % POOFER_FRAME_OUTPUT_PERIOD;
                 }
 
                 self.preview.request_redraw();
@@ -211,8 +206,24 @@ pub struct Poofer {
     pub x: f32,
     pub y: f32,
     pub on: bool,
+    pub changed: bool,
     /// Multiple solenoids / relays which always will poof together
     pub relays: Vec<RelayAddress>,
+}
+impl Poofer {
+    pub fn poof(&mut self, new_value_of_on: bool) {
+        match (self.on, new_value_of_on) {
+            (true, false) => {
+                self.on = false;
+                self.changed = true;
+            }
+            (false, true) => {
+                self.on = true;
+                self.changed = true;
+            }
+            _ => {}
+        }
+    }
 }
 
 /**
@@ -252,6 +263,7 @@ fn create_elders() -> Vec<Elder> {
                 x: elder_theta.cos() * poofer_radius,
                 y: elder_theta.sin() * poofer_radius,
                 on: false,
+                changed: false,
                 // We will start out poofers in pairs for each elder
                 relays: vec![
                     RelayAddress {
