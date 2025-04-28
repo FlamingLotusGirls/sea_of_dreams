@@ -26,14 +26,11 @@ pub fn get_effects() -> Vec<Box<dyn Effect>> {
     ]
 }
 
+#[allow(dead_code)]
 pub fn get_effect(i: usize) -> Option<Box<dyn Effect>> {
-    get_effects()
-        .into_iter()
-        .skip(i)
-        .take(1)
-        .collect::<Vec<Box<dyn Effect>>>()
-        .pop()
+    get_effects().into_iter().nth(i)
 }
+
 const PERIOD: f32 = 2.37;
 
 #[derive(Clone, Copy)]
