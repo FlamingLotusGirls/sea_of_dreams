@@ -190,7 +190,6 @@ impl App {
 pub struct Elder {
     pub artnet_target_addr: SocketAddr,
     pub crane_light: Pixel,
-    pub poofer_both: Poofer,
     pub poofer_wide: Poofer,
     pub poofer_narrow: Poofer,
 }
@@ -206,12 +205,11 @@ pub struct Pixel {
 
 #[derive(Clone, Debug)]
 pub struct Poofer {
+    pub relay_address: RelayAddress,
     pub x: f32,
     pub y: f32,
     pub on: bool,
     pub needs_to_send_command: bool,
-    /// Multiple solenoids / relays which always will poof together
-    pub relays: Vec<RelayAddress>,
 }
 impl Poofer {
     pub fn poof(&mut self, new_value_of_on: bool) {
@@ -233,11 +231,13 @@ impl Poofer {
  * Board address is based on dip switches. LSB is dip switch 1, MSB is dip switch 5. Putting the
  * switch in the direction of the arrow means 0; against the opposite direction of the arrow means
  * 1.
+ *
+ * Relay numbers within each board are one-indexed and there are up to 8.
  */
 #[derive(Clone, Debug)]
 pub struct RelayAddress {
     pub board_address: u8,
-    pub poofer_address: u8,
+    pub relay_number: u8,
 }
 
 pub struct ElderDefinition {
@@ -252,99 +252,99 @@ fn get_elder_defs() -> [ElderDefinition; 9] {
             artnet_target_ip_last_octet: 91,
             relay_wide: RelayAddress {
                 board_address: 1,
-                poofer_address: 1,
+                relay_number: 1,
             },
             relay_narrow: RelayAddress {
                 board_address: 1,
-                poofer_address: 2,
+                relay_number: 2,
             },
         },
         ElderDefinition {
             artnet_target_ip_last_octet: 92,
             relay_wide: RelayAddress {
                 board_address: 1,
-                poofer_address: 3,
+                relay_number: 3,
             },
             relay_narrow: RelayAddress {
                 board_address: 1,
-                poofer_address: 4,
+                relay_number: 4,
             },
         },
         ElderDefinition {
             artnet_target_ip_last_octet: 93,
             relay_wide: RelayAddress {
                 board_address: 1,
-                poofer_address: 5,
+                relay_number: 5,
             },
             relay_narrow: RelayAddress {
                 board_address: 1,
-                poofer_address: 6,
+                relay_number: 6,
             },
         },
         ElderDefinition {
             artnet_target_ip_last_octet: 94,
             relay_wide: RelayAddress {
                 board_address: 2,
-                poofer_address: 1,
+                relay_number: 1,
             },
             relay_narrow: RelayAddress {
                 board_address: 2,
-                poofer_address: 2,
+                relay_number: 2,
             },
         },
         ElderDefinition {
             artnet_target_ip_last_octet: 95,
             relay_wide: RelayAddress {
                 board_address: 2,
-                poofer_address: 3,
+                relay_number: 3,
             },
             relay_narrow: RelayAddress {
                 board_address: 2,
-                poofer_address: 4,
+                relay_number: 4,
             },
         },
         ElderDefinition {
             artnet_target_ip_last_octet: 96,
             relay_wide: RelayAddress {
                 board_address: 2,
-                poofer_address: 5,
+                relay_number: 5,
             },
             relay_narrow: RelayAddress {
                 board_address: 2,
-                poofer_address: 6,
+                relay_number: 6,
             },
         },
         ElderDefinition {
             artnet_target_ip_last_octet: 97,
             relay_wide: RelayAddress {
                 board_address: 3,
-                poofer_address: 1,
+                relay_number: 1,
             },
             relay_narrow: RelayAddress {
                 board_address: 3,
-                poofer_address: 2,
+                relay_number: 2,
             },
         },
         ElderDefinition {
             artnet_target_ip_last_octet: 98,
             relay_wide: RelayAddress {
                 board_address: 3,
-                poofer_address: 3,
+                relay_number: 3,
             },
             relay_narrow: RelayAddress {
                 board_address: 3,
-                poofer_address: 4,
+                relay_number: 4,
             },
         },
         ElderDefinition {
             artnet_target_ip_last_octet: 99,
             relay_wide: RelayAddress {
                 board_address: 3,
-                poofer_address: 5,
+                relay_number: 5,
             },
             relay_narrow: RelayAddress {
                 board_address: 3,
-                poofer_address: 6,
+                relay_number: 6,
             },
         },
     ]
@@ -386,26 +386,19 @@ fn create_elders() -> Vec<Elder> {
                         g: 0.,
                         b: 0.,
                     },
-                    poofer_both: Poofer {
-                        x: elder_theta.cos() * poofer_radius,
-                        y: elder_theta.sin() * poofer_radius,
-                        on: false,
-                        needs_to_send_command: false,
-                        relays: vec![relay_wide.clone(), relay_narrow.clone()],
-                    },
                     poofer_wide: Poofer {
+                        relay_address: relay_wide,
                         x: elder_theta.cos() * poofer_radius,
                         y: elder_theta.sin() * poofer_radius,
                         on: false,
                         needs_to_send_command: false,
-                        relays: vec![relay_wide],
                     },
                     poofer_narrow: Poofer {
+                        relay_address: relay_narrow,
                         x: elder_theta.cos() * poofer_radius,
                         y: elder_theta.sin() * poofer_radius,
                         on: false,
                         needs_to_send_command: false,
-                        relays: vec![relay_narrow],
                     },
                 }
             },

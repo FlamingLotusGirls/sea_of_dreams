@@ -81,9 +81,11 @@ impl Effect for AllPoof {
 
         for elder in elders.iter_mut() {
             if d < 0.3 {
-                elder.poofer_both.poof(true);
+                elder.poofer_wide.poof(true);
+                elder.poofer_narrow.poof(true);
             } else {
-                elder.poofer_both.poof(false);
+                elder.poofer_wide.poof(false);
+                elder.poofer_narrow.poof(false);
             }
         }
     }
@@ -144,9 +146,11 @@ impl Effect for PoofRing {
         let poof_index = (d * 2.0) as usize % elders.len();
         for (i, elder) in elders.iter_mut().enumerate() {
             if i == poof_index {
-                elder.poofer_both.poof(true);
+                elder.poofer_wide.poof(true);
+                elder.poofer_narrow.poof(true);
             } else {
-                elder.poofer_both.poof(false);
+                elder.poofer_wide.poof(false);
+                elder.poofer_narrow.poof(false);
             }
         }
     }
