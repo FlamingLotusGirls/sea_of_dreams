@@ -45,6 +45,7 @@ struct App {
     all_effects: Vec<Box<dyn Effect>>,
     artnet_output_enabled: bool,
     poofer_output_enabled: bool,
+    poofer_output_enabled_once: bool,
     artnet_output_frame_count: usize,
     available_serial_ports: Vec<String>,
     poofer_port: Option<PooferBusPort>,
@@ -74,6 +75,7 @@ impl App {
                 all_effects: get_effects(),
                 artnet_output_enabled: true,
                 poofer_output_enabled: false,
+                poofer_output_enabled_once: false,
                 artnet_output_frame_count: 0,
                 available_serial_ports: PooferBusPort::available_ports(),
                 poofer_port: None,
@@ -111,8 +113,9 @@ impl App {
                 }
 
                 if let Some(poofer_port) = &mut self.poofer_port {
-                    if self.poofer_output_enabled {
+                    if self.poofer_output_enabled || self.poofer_output_enabled_once {
                         poofer_port.output(&mut self.preview.0);
+                        self.poofer_output_enabled_once = false;
                     }
                 }
 
@@ -125,10 +128,17 @@ impl App {
                 Task::none()
             }
             Message::PooferOutputCheckboxPressed => {
-                self.poofer_output_enabled = !self.poofer_output_enabled;
+                if self.poofer_output_enabled {
+                    self.turn_poofers_off();
+                    self.poofer_output_enabled_once = true;
+                    self.poofer_output_enabled = false;
+                } else {
+                    self.poofer_output_enabled = true;
+                }
                 Task::none()
             }
             Message::SelectEffect(i) => {
+                self.turn_poofers_off();
                 self.current_effect = i;
                 self.effect_start = Instant::now();
                 Task::none()
@@ -183,5 +193,12 @@ impl App {
 
     fn subscription(&self) -> Subscription<Message> {
         time::every(Duration::from_millis(10)).map(Message::Tick)
+    }
+
+    fn turn_poofers_off(&mut self) {
+        for elder in &mut self.preview.0 {
+            elder.poofer_wide.poof(false);
+            elder.poofer_narrow.poof(false);
+        }
     }
 }
