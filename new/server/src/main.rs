@@ -14,7 +14,7 @@ use poofer_bus_port::PooferBusPort;
 use std::time::{Duration, Instant};
 
 use artnet_output_socket::ArtnetOutputSocket;
-use effects::{Effect, get_effects};
+use effects::{Effect, get_ambient_effects, get_trigger_effects};
 
 const ARTNET_FRAME_OUTPUT_PERIOD: usize = 2;
 
@@ -37,16 +37,19 @@ fn main() -> iced::Result {
 
 struct App {
     main_window_size: Size,
-    start: Instant,
-    effect_start: Instant,
     preview: preview::Preview,
-    current_effect: usize,
+    start: Instant,
+    ambient_effect_start: Instant,
+    trigger_effect_start: Instant,
+    current_ambient_effect: usize,
+    current_trigger_effect: Option<usize>,
+    ambient_effects: Vec<Box<dyn Effect>>,
+    trigger_effects: Vec<Box<dyn Effect>>,
     artnet_socket: ArtnetOutputSocket,
-    all_effects: Vec<Box<dyn Effect>>,
     artnet_output_enabled: bool,
+    artnet_output_frame_count: usize,
     poofer_output_enabled: bool,
     poofer_output_enabled_once: bool,
-    artnet_output_frame_count: usize,
     available_serial_ports: Vec<String>,
     poofer_port: Option<PooferBusPort>,
 }
@@ -59,7 +62,8 @@ enum Message {
     Tick(Instant),
     ArtnetOutputCheckboxPressed,
     PooferOutputCheckboxPressed,
-    SelectEffect(usize),
+    SelectAmbientEffect(usize),
+    SelectTriggerEffect(usize),
     SelectSerialPort(String),
 }
 impl App {
@@ -67,16 +71,19 @@ impl App {
         (
             App {
                 main_window_size: Size::new(0., 0.),
-                start: Instant::now(),
-                effect_start: Instant::now(),
                 preview: preview::Preview::new(create_elders()),
-                current_effect: 0,
+                start: Instant::now(),
+                ambient_effect_start: Instant::now(),
+                trigger_effect_start: Instant::now(),
+                current_ambient_effect: 0,
+                current_trigger_effect: None,
+                ambient_effects: get_ambient_effects(),
+                trigger_effects: get_trigger_effects(),
                 artnet_socket: ArtnetOutputSocket::new(),
-                all_effects: get_effects(),
                 artnet_output_enabled: true,
+                artnet_output_frame_count: 0,
                 poofer_output_enabled: false,
                 poofer_output_enabled_once: false,
-                artnet_output_frame_count: 0,
                 available_serial_ports: PooferBusPort::available_ports(),
                 poofer_port: None,
             },
@@ -98,11 +105,19 @@ impl App {
                     pixel.crane_light.g = 0.;
                     pixel.crane_light.b = 0.;
                 }
-                self.all_effects[self.current_effect].render(
+
+                self.ambient_effects[self.current_ambient_effect].render(
                     &mut self.preview.0,
                     now - self.start,
-                    now - self.effect_start,
+                    now - self.ambient_effect_start,
                 );
+                if let Some(current_trigger_effect) = self.current_trigger_effect {
+                    self.trigger_effects[current_trigger_effect].render(
+                        &mut self.preview.0,
+                        now - self.start,
+                        now - self.trigger_effect_start,
+                    );
+                }
 
                 if self.artnet_output_enabled {
                     if self.artnet_output_frame_count == 0 {
@@ -137,10 +152,20 @@ impl App {
                 }
                 Task::none()
             }
-            Message::SelectEffect(i) => {
+            Message::SelectAmbientEffect(i) => {
                 self.turn_poofers_off();
-                self.current_effect = i;
-                self.effect_start = Instant::now();
+                self.current_ambient_effect = i;
+                self.ambient_effect_start = Instant::now();
+                Task::none()
+            }
+            Message::SelectTriggerEffect(i) => {
+                self.turn_poofers_off();
+                if self.current_trigger_effect == Some(i) {
+                    self.current_trigger_effect = None;
+                } else {
+                    self.current_trigger_effect = Some(i);
+                }
+                self.trigger_effect_start = Instant::now();
                 Task::none()
             }
             Message::SelectSerialPort(port_name) => {
@@ -153,15 +178,27 @@ impl App {
     fn view(&self) -> Element<Message> {
         use iced::widget::{column, *};
         container(row![
-            container(column(self.all_effects.iter().enumerate().map(
+            container(column(self.ambient_effects.iter().enumerate().map(
                 |(i, effect)| {
                     (button(text(effect.name()))
-                        .style(if i == self.current_effect {
+                        .style(if i == self.current_ambient_effect {
                             button::primary
                         } else {
                             button::secondary
                         })
-                        .on_press(Message::SelectEffect(i)))
+                        .on_press(Message::SelectAmbientEffect(i)))
+                    .into()
+                }
+            ))),
+            container(column(self.trigger_effects.iter().enumerate().map(
+                |(i, effect)| {
+                    (button(text(effect.name()))
+                        .style(if Some(i) == self.current_trigger_effect {
+                            button::primary
+                        } else {
+                            button::secondary
+                        })
+                        .on_press(Message::SelectTriggerEffect(i)))
                     .into()
                 }
             ))),

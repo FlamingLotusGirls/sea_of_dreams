@@ -7,7 +7,7 @@ pub trait Effect {
     fn render(&mut self, elders: &mut Vec<Elder>, program_time: Duration, effect_time: Duration);
 }
 
-pub fn get_effects() -> Vec<Box<dyn Effect>> {
+pub fn get_ambient_effects() -> Vec<Box<dyn Effect>> {
     vec![
         Box::new(Pseudorandom),
         Box::new(RedToBlue),
@@ -16,6 +16,15 @@ pub fn get_effects() -> Vec<Box<dyn Effect>> {
         Box::new(Unison2Colors),
         Box::new(FadePairs),
         Box::new(Solid),
+    ]
+}
+
+/**
+ * Usually fire but could include LEDs as well. It's up to the effect whether it wants to overwrite
+ * the LED value from the current ambient effect.
+ */
+pub fn get_trigger_effects() -> Vec<Box<dyn Effect>> {
+    vec![
         Box::new(PoofRing),
         Box::new(PoofRingWide),
         Box::new(PoofRingNarrow),
@@ -27,7 +36,7 @@ pub fn get_effects() -> Vec<Box<dyn Effect>> {
 
 #[allow(dead_code)]
 pub fn get_effect(i: usize) -> Option<Box<dyn Effect>> {
-    get_effects().into_iter().nth(i)
+    get_ambient_effects().into_iter().nth(i)
 }
 
 const PERIOD: f32 = 20.;
