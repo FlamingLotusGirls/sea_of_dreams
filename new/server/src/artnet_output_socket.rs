@@ -1,12 +1,10 @@
-use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4, UdpSocket};
+use std::net::UdpSocket;
 
 use artnet_protocol::{ArtCommand, Output};
 
 use crate::Elder;
 
 const MY_IP: &str = "0.0.0.0:6454";
-const TARGET_ADDRESS: SocketAddr =
-    SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(169, 254, 9, 91), 6454));
 
 pub struct ArtnetOutputSocket {
     socket: UdpSocket,
@@ -19,25 +17,35 @@ impl ArtnetOutputSocket {
     }
 
     pub fn output(&self, elders: &Vec<Elder>) {
-        let command = ArtCommand::Output(Output {
-            data: {
-                elders
-                    .iter()
-                    .flat_map(|elder| {
-                        [
-                            GAMMA[(elder.crane_light.r * 255.) as usize],
-                            GAMMA[(elder.crane_light.g * 255.) as usize],
-                            GAMMA[(elder.crane_light.b * 255.) as usize],
-                        ]
-                    })
-                    .collect::<Vec<u8>>()
-                    .into()
-            },
-            port_address: (0 as u16).try_into().unwrap(),
-            ..Default::default()
-        });
-        let command_buffer = command.write_to_buffer().unwrap();
-        let _ = self.socket.send_to(&command_buffer, TARGET_ADDRESS);
+        for elder in elders {
+            let command = ArtCommand::Output(Output {
+                data: {
+                    let pixels = [
+                        elder.crane_light,
+                        elder.crane_light,
+                        elder.crane_light,
+                        elder.crane_light,
+                    ];
+                    pixels
+                        .iter()
+                        .flat_map(|pixel| {
+                            [
+                                GAMMA[(pixel.r * 255.) as usize],
+                                GAMMA[(pixel.g * 255.) as usize],
+                                GAMMA[(pixel.b * 255.) as usize],
+                            ]
+                        })
+                        .collect::<Vec<u8>>()
+                        .into()
+                },
+                port_address: (0 as u16).try_into().unwrap(),
+                ..Default::default()
+            });
+            let command_buffer = command.write_to_buffer().unwrap();
+            let _ = self
+                .socket
+                .send_to(&command_buffer, elder.artnet_target_addr);
+        }
     }
 }
 

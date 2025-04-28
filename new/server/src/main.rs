@@ -8,13 +8,14 @@ use iced::{
     window,
 };
 use poofer_bus_port::PooferBusPort;
-use std::time::{Duration, Instant};
+use std::{
+    net::{Ipv4Addr, SocketAddr, SocketAddrV4},
+    time::{Duration, Instant},
+};
 
 use artnet_output_socket::ArtnetOutputSocket;
 use effects::{Effect, get_effect};
 
-// Since we only support one art-net universe (512B), 170 is the maximum number of total pixels for now
-const ELDER_COUNT: usize = 9;
 const ARTNET_FRAME_OUTPUT_PERIOD: usize = 2;
 
 fn main() -> iced::Result {
@@ -195,6 +196,7 @@ impl App {
 
 #[derive(Clone, Debug)]
 pub struct Elder {
+    pub artnet_target_addr: SocketAddr,
     pub crane_light: Pixel,
     pub poofer_both: Poofer,
     pub poofer_wide: Poofer,
@@ -246,69 +248,175 @@ pub struct RelayAddress {
     pub poofer_address: u8,
 }
 
+pub struct ElderDefinition {
+    pub artnet_target_ip_last_octet: u8,
+    pub relay_wide: RelayAddress,
+    pub relay_narrow: RelayAddress,
+}
+
+fn get_elder_defs() -> [ElderDefinition; 9] {
+    [
+        ElderDefinition {
+            artnet_target_ip_last_octet: 91,
+            relay_wide: RelayAddress {
+                board_address: 1,
+                poofer_address: 1,
+            },
+            relay_narrow: RelayAddress {
+                board_address: 1,
+                poofer_address: 2,
+            },
+        },
+        ElderDefinition {
+            artnet_target_ip_last_octet: 92,
+            relay_wide: RelayAddress {
+                board_address: 1,
+                poofer_address: 3,
+            },
+            relay_narrow: RelayAddress {
+                board_address: 1,
+                poofer_address: 4,
+            },
+        },
+        ElderDefinition {
+            artnet_target_ip_last_octet: 93,
+            relay_wide: RelayAddress {
+                board_address: 1,
+                poofer_address: 5,
+            },
+            relay_narrow: RelayAddress {
+                board_address: 1,
+                poofer_address: 6,
+            },
+        },
+        ElderDefinition {
+            artnet_target_ip_last_octet: 94,
+            relay_wide: RelayAddress {
+                board_address: 2,
+                poofer_address: 1,
+            },
+            relay_narrow: RelayAddress {
+                board_address: 2,
+                poofer_address: 2,
+            },
+        },
+        ElderDefinition {
+            artnet_target_ip_last_octet: 95,
+            relay_wide: RelayAddress {
+                board_address: 2,
+                poofer_address: 3,
+            },
+            relay_narrow: RelayAddress {
+                board_address: 2,
+                poofer_address: 4,
+            },
+        },
+        ElderDefinition {
+            artnet_target_ip_last_octet: 96,
+            relay_wide: RelayAddress {
+                board_address: 2,
+                poofer_address: 5,
+            },
+            relay_narrow: RelayAddress {
+                board_address: 2,
+                poofer_address: 6,
+            },
+        },
+        ElderDefinition {
+            artnet_target_ip_last_octet: 97,
+            relay_wide: RelayAddress {
+                board_address: 3,
+                poofer_address: 1,
+            },
+            relay_narrow: RelayAddress {
+                board_address: 3,
+                poofer_address: 2,
+            },
+        },
+        ElderDefinition {
+            artnet_target_ip_last_octet: 98,
+            relay_wide: RelayAddress {
+                board_address: 3,
+                poofer_address: 3,
+            },
+            relay_narrow: RelayAddress {
+                board_address: 3,
+                poofer_address: 4,
+            },
+        },
+        ElderDefinition {
+            artnet_target_ip_last_octet: 99,
+            relay_wide: RelayAddress {
+                board_address: 3,
+                poofer_address: 5,
+            },
+            relay_narrow: RelayAddress {
+                board_address: 3,
+                poofer_address: 6,
+            },
+        },
+    ]
+}
+
 /**
  * We use -1 to 1 for both X and Y axes.
  */
 fn create_elders() -> Vec<Elder> {
-    let mut elders = Vec::with_capacity(ELDER_COUNT);
-
     let starting_theta = -std::f32::consts::FRAC_PI_2;
     let crane_light_radius: f32 = 0.5;
     let poofer_radius: f32 = 0.6;
 
-    let elder_count = ELDER_COUNT as f32;
-    for i in 0..ELDER_COUNT {
-        let i_u8 = i as u8;
-        let elder_theta = starting_theta + std::f32::consts::TAU * (i as f32) / elder_count;
-        elders.push(Elder {
-            crane_light: Pixel {
-                x: elder_theta.cos() * crane_light_radius,
-                y: elder_theta.sin() * crane_light_radius,
-                r: 0.,
-                g: 0.,
-                b: 0.,
-            },
-            poofer_both: Poofer {
-                x: elder_theta.cos() * poofer_radius,
-                y: elder_theta.sin() * poofer_radius,
-                on: false,
-                needs_to_send_command: false,
-                // Poof all relays for this elder
-                relays: vec![
-                    RelayAddress {
-                        board_address: 1 + i_u8 / 3,
-                        poofer_address: 2 * (i_u8 % 3) + 1,
+    let elder_defs = get_elder_defs();
+    let elder_count = elder_defs.len() as f32;
+    elder_defs
+        .into_iter()
+        .enumerate()
+        .map(
+            |(
+                i,
+                ElderDefinition {
+                    artnet_target_ip_last_octet,
+                    relay_wide,
+                    relay_narrow,
+                },
+            )| {
+                let elder_theta = starting_theta + std::f32::consts::TAU * (i as f32) / elder_count;
+                Elder {
+                    artnet_target_addr: SocketAddrV4::new(
+                        Ipv4Addr::new(169, 254, 9, artnet_target_ip_last_octet),
+                        6454,
+                    )
+                    .into(),
+                    crane_light: Pixel {
+                        x: elder_theta.cos() * crane_light_radius,
+                        y: elder_theta.sin() * crane_light_radius,
+                        r: 0.,
+                        g: 0.,
+                        b: 0.,
                     },
-                    RelayAddress {
-                        board_address: 1 + i_u8 / 3,
-                        poofer_address: 2 * (i_u8 % 3) + 2,
+                    poofer_both: Poofer {
+                        x: elder_theta.cos() * poofer_radius,
+                        y: elder_theta.sin() * poofer_radius,
+                        on: false,
+                        needs_to_send_command: false,
+                        relays: vec![relay_wide.clone(), relay_narrow.clone()],
                     },
-                ],
+                    poofer_wide: Poofer {
+                        x: elder_theta.cos() * poofer_radius,
+                        y: elder_theta.sin() * poofer_radius,
+                        on: false,
+                        needs_to_send_command: false,
+                        relays: vec![relay_wide],
+                    },
+                    poofer_narrow: Poofer {
+                        x: elder_theta.cos() * poofer_radius,
+                        y: elder_theta.sin() * poofer_radius,
+                        on: false,
+                        needs_to_send_command: false,
+                        relays: vec![relay_narrow],
+                    },
+                }
             },
-            poofer_wide: Poofer {
-                x: elder_theta.cos() * poofer_radius,
-                y: elder_theta.sin() * poofer_radius,
-                on: false,
-                needs_to_send_command: false,
-                // Poof the relays that control the wide-pointing nozzles
-                relays: vec![RelayAddress {
-                    board_address: 1 + i_u8 / 3,
-                    poofer_address: 2 * (i_u8 % 3) + 1,
-                }],
-            },
-            poofer_narrow: Poofer {
-                x: elder_theta.cos() * poofer_radius,
-                y: elder_theta.sin() * poofer_radius,
-                on: false,
-                needs_to_send_command: false,
-                // Poof the relays that control the narrow-pointing nozzles
-                relays: vec![RelayAddress {
-                    board_address: 1 + i_u8 / 3,
-                    poofer_address: 2 * (i_u8 % 3) + 2,
-                }],
-            },
-        });
-    }
-
-    elders
+        )
+        .collect::<Vec<Elder>>()
 }

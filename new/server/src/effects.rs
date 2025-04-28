@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use crate::{ELDER_COUNT, Elder};
+use crate::Elder;
 
 pub trait Effect {
     fn name(&self) -> String;
@@ -94,7 +94,7 @@ impl Effect for PoofRingNarrow {
     fn render(&mut self, elders: &mut Vec<Elder>, program_time: Duration, _effect_time: Duration) {
         let d = program_time.as_secs_f32();
 
-        let poof_index = (d * 2.0) as usize % ELDER_COUNT;
+        let poof_index = (d * 2.0) as usize % elders.len();
         for (i, elder) in elders.iter_mut().enumerate() {
             if i == poof_index {
                 elder.poofer_narrow.poof(true);
@@ -115,7 +115,7 @@ impl Effect for PoofRingWide {
     fn render(&mut self, elders: &mut Vec<Elder>, program_time: Duration, _effect_time: Duration) {
         let d = program_time.as_secs_f32();
 
-        let poof_index = (d * 2.0) as usize % ELDER_COUNT;
+        let poof_index = (d * 2.0) as usize % elders.len();
         for (i, elder) in elders.iter_mut().enumerate() {
             if i == poof_index {
                 elder.poofer_wide.poof(true);
@@ -136,7 +136,7 @@ impl Effect for PoofRing {
     fn render(&mut self, elders: &mut Vec<Elder>, program_time: Duration, _effect_time: Duration) {
         let d = program_time.as_secs_f32();
 
-        let poof_index = (d * 2.0) as usize % ELDER_COUNT;
+        let poof_index = (d * 2.0) as usize % elders.len();
         for (i, elder) in elders.iter_mut().enumerate() {
             if i == poof_index {
                 elder.poofer_both.poof(true);
