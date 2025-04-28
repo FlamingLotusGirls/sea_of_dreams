@@ -14,7 +14,7 @@ use std::{
 };
 
 use artnet_output_socket::ArtnetOutputSocket;
-use effects::{Effect, get_effect};
+use effects::{Effect, get_effects};
 
 const ARTNET_FRAME_OUTPUT_PERIOD: usize = 2;
 
@@ -71,15 +71,7 @@ impl App {
                 preview: preview::Preview::new(create_elders()),
                 current_effect: 0,
                 artnet_socket: ArtnetOutputSocket::new(),
-                all_effects: {
-                    let mut effects: Vec<Box<dyn Effect>> = vec![];
-                    let mut i = 0;
-                    while let Some(effect) = get_effect(i) {
-                        effects.push(effect);
-                        i += 1;
-                    }
-                    effects
-                },
+                all_effects: get_effects(),
                 artnet_output_enabled: true,
                 poofer_output_enabled: false,
                 artnet_output_frame_count: 0,

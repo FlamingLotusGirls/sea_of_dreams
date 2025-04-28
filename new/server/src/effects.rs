@@ -7,24 +7,32 @@ pub trait Effect {
     fn render(&mut self, elders: &mut Vec<Elder>, program_time: Duration, effect_time: Duration);
 }
 
+pub fn get_effects() -> Vec<Box<dyn Effect>> {
+    vec![
+        Box::new(DefaultEffect),
+        Box::new(TestEffectA),
+        Box::new(TestEffectB),
+        Box::new(TestEffectC),
+        Box::new(TestEffectD),
+        Box::new(InitialTest),
+        Box::new(FadePairs),
+        Box::new(SolidEffect),
+        Box::new(PoofRing),
+        Box::new(PoofRingWide),
+        Box::new(PoofRingNarrow),
+        Box::new(AllPoof),
+        Box::new(AllPoofWide),
+        Box::new(AllPoofNarrow),
+    ]
+}
+
 pub fn get_effect(i: usize) -> Option<Box<dyn Effect>> {
-    match i {
-        0 => Some(Box::new(DefaultEffect)),
-        1 => Some(Box::new(TestEffectA)),
-        2 => Some(Box::new(TestEffectB)),
-        3 => Some(Box::new(TestEffectC)),
-        4 => Some(Box::new(TestEffectD)),
-        5 => Some(Box::new(InitialTest)),
-        6 => Some(Box::new(FadePairs)),
-        7 => Some(Box::new(SolidEffect)),
-        8 => Some(Box::new(PoofRing)),
-        9 => Some(Box::new(PoofRingWide)),
-        10 => Some(Box::new(PoofRingNarrow)),
-        11 => Some(Box::new(AllPoof)),
-        12 => Some(Box::new(AllPoofWide)),
-        13 => Some(Box::new(AllPoofNarrow)),
-        _ => None,
-    }
+    get_effects()
+        .into_iter()
+        .skip(i)
+        .take(1)
+        .collect::<Vec<Box<dyn Effect>>>()
+        .pop()
 }
 const PERIOD: f32 = 2.37;
 
