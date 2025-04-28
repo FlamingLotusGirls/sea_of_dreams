@@ -9,14 +9,13 @@ pub trait Effect {
 
 pub fn get_effects() -> Vec<Box<dyn Effect>> {
     vec![
-        Box::new(DefaultEffect),
-        Box::new(TestEffectA),
-        Box::new(TestEffectB),
-        Box::new(TestEffectC),
+        Box::new(Pseudorandom),
+        Box::new(RedToBlue),
+        Box::new(GreenToBlue),
         Box::new(FadeRing2Colors),
         Box::new(Unison2Colors),
         Box::new(FadePairs),
-        Box::new(SolidEffect),
+        Box::new(Solid),
         Box::new(PoofRing),
         Box::new(PoofRingWide),
         Box::new(PoofRingNarrow),
@@ -161,8 +160,8 @@ impl Effect for PoofRing {
 }
 
 #[derive(Clone, Copy)]
-pub struct DefaultEffect;
-impl Effect for DefaultEffect {
+pub struct Pseudorandom;
+impl Effect for Pseudorandom {
     fn render(&mut self, elders: &mut Vec<Elder>, program_time: Duration, _effect_time: Duration) {
         let t = program_time.as_secs_f32() * 0.08;
         // let p = 4.0;
@@ -180,13 +179,13 @@ impl Effect for DefaultEffect {
     }
 
     fn name(&self) -> String {
-        "Default".into()
+        "Pseudorandom".into()
     }
 }
 
 #[derive(Clone, Copy)]
-pub struct SolidEffect;
-impl Effect for SolidEffect {
+pub struct Solid;
+impl Effect for Solid {
     fn render(&mut self, elders: &mut Vec<Elder>, _program_time: Duration, _effect_time: Duration) {
         for (_i, elder) in elders.iter_mut().enumerate() {
             elder.crane_light.r = 0.7;
@@ -201,8 +200,8 @@ impl Effect for SolidEffect {
 }
 
 #[derive(Clone, Copy)]
-pub struct TestEffectA;
-impl Effect for TestEffectA {
+pub struct RedToBlue;
+impl Effect for RedToBlue {
     fn render(&mut self, elders: &mut Vec<Elder>, program_time: Duration, _effect_time: Duration) {
         let len = elders.len();
         let t = program_time.as_secs_f32();
@@ -214,13 +213,13 @@ impl Effect for TestEffectA {
     }
 
     fn name(&self) -> String {
-        "A".into()
+        "Red to Blue".into()
     }
 }
 
 #[derive(Clone, Copy)]
-pub struct TestEffectB;
-impl Effect for TestEffectB {
+pub struct GreenToBlue;
+impl Effect for GreenToBlue {
     fn render(&mut self, elders: &mut Vec<Elder>, program_time: Duration, _effect_time: Duration) {
         let len = elders.len();
         let t = program_time.as_secs_f32();
@@ -232,25 +231,7 @@ impl Effect for TestEffectB {
     }
 
     fn name(&self) -> String {
-        "B".into()
-    }
-}
-
-#[derive(Clone, Copy)]
-pub struct TestEffectC;
-impl Effect for TestEffectC {
-    fn render(&mut self, elders: &mut Vec<Elder>, program_time: Duration, _effect_time: Duration) {
-        let len = elders.len();
-        let t = program_time.as_secs_f32();
-        for (i, elder) in elders.iter_mut().enumerate() {
-            let x = ((t % PERIOD) / PERIOD + (i as f32) / len as f32) % 1.;
-            elder.crane_light.r = 1. - x;
-            elder.crane_light.g = x;
-        }
-    }
-
-    fn name(&self) -> String {
-        "C".into()
+        "Green to Blue".into()
     }
 }
 
