@@ -61,7 +61,7 @@ pub struct Elder {
  */
 pub fn create_elders() -> Vec<Elder> {
     let starting_theta = -std::f32::consts::FRAC_PI_2;
-    let crane_light_radius: f32 = 0.5;
+    let crane_light_radius: f32 = 0.4;
     let poofer_radius: f32 = 0.6;
 
     let elder_defs = get_elder_defs();
