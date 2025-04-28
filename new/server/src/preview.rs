@@ -4,7 +4,7 @@ use iced::{
     widget::canvas::{self, Path},
 };
 
-use crate::Elder;
+use crate::model::Elder;
 
 pub struct Preview(pub Vec<Elder>, canvas::Cache);
 impl Preview {

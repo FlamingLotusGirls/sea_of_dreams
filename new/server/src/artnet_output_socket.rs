@@ -2,7 +2,7 @@ use std::net::UdpSocket;
 
 use artnet_protocol::{ArtCommand, Output};
 
-use crate::Elder;
+use crate::model::Elder;
 
 const MY_IP: &str = "0.0.0.0:6454";
 

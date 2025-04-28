@@ -1,4 +1,4 @@
-use crate::{Elder, RelayAddress};
+use crate::model::{Elder, RelayAddress};
 use serialport::{DataBits, SerialPortType, StopBits};
 use std::{
     io::Write as _,

@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use crate::Elder;
+use crate::model::Elder;
 
 pub trait Effect {
     fn name(&self) -> String;
