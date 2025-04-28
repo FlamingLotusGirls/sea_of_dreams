@@ -152,39 +152,41 @@ impl App {
 
     fn view(&self) -> Element<Message> {
         use iced::widget::{column, *};
-        container(column![
-            container(row(self.all_effects.iter().enumerate().map(
-                |(i, effect)| (button(text(effect.name()))
-                    .style(if i == self.current_effect {
-                        button::primary
-                    } else {
-                        button::secondary
-                    })
-                    .on_press(Message::SelectEffect(i)))
-                .into()
+        container(row![
+            container(column(self.all_effects.iter().enumerate().map(
+                |(i, effect)| {
+                    (button(text(effect.name()))
+                        .style(if i == self.current_effect {
+                            button::primary
+                        } else {
+                            button::secondary
+                        })
+                        .on_press(Message::SelectEffect(i)))
+                    .into()
+                }
             ))),
-            row![
+            container(responsive(move |bounds| {
+                let Size { width, height } = ContentFit::Contain.fit(Size::new(1., 1.), bounds);
+                center(
+                    canvas(&self.preview)
+                        .width(Length::Fixed(width))
+                        .height(Length::Fixed(height)),
+                )
+                .into()
+            }))
+            .width(Length::Fill)
+            .height(Length::Fill),
+            column![
+                checkbox("Output LEDs", self.artnet_output_enabled)
+                    .on_toggle(|_| { Message::ArtnetOutputCheckboxPressed }),
+                checkbox("Output Poofers", self.poofer_output_enabled)
+                    .on_toggle(|_| { Message::PooferOutputCheckboxPressed }),
                 column(self.available_serial_ports.iter().map(|port_name| {
                     button(text(port_name))
                         .on_press(Message::SelectSerialPort(port_name.clone()))
                         .into()
                 })),
-                container(responsive(move |bounds| {
-                    let Size { width, height } = ContentFit::Contain.fit(Size::new(1., 1.), bounds);
-                    center(
-                        canvas(&self.preview)
-                            .width(Length::Fixed(width))
-                            .height(Length::Fixed(height)),
-                    )
-                    .into()
-                }))
-                .width(Length::Fill)
-                .height(Length::Fill),
             ],
-            checkbox("Output LEDs", self.artnet_output_enabled)
-                .on_toggle(|_| { Message::ArtnetOutputCheckboxPressed }),
-            checkbox("Output Poofers", self.poofer_output_enabled)
-                .on_toggle(|_| { Message::PooferOutputCheckboxPressed }),
         ])
         .width(Length::Fill)
         .height(Length::Fill)
