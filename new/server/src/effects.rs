@@ -16,6 +16,15 @@ pub fn get_ambient_effects() -> Vec<Box<dyn Effect>> {
         Box::new(Unison2Colors),
         Box::new(FadePairs),
         Box::new(Solid),
+        Box::new(Light1),
+        Box::new(Light2),
+        Box::new(Light3),
+        Box::new(Light4),
+        Box::new(Light5),
+        Box::new(Light6),
+        Box::new(Light7),
+        Box::new(Light8),
+        Box::new(Light9),
     ]
 }
 
@@ -31,6 +40,15 @@ pub fn get_trigger_effects() -> Vec<Box<dyn Effect>> {
         Box::new(AllPoof),
         Box::new(AllPoofWide),
         Box::new(AllPoofNarrow),
+        Box::new(Poof1),
+        Box::new(Poof2),
+        Box::new(Poof3),
+        Box::new(Poof4),
+        Box::new(Poof5),
+        Box::new(Poof6),
+        Box::new(Poof7),
+        Box::new(Poof8),
+        Box::new(Poof9),
     ]
 }
 
@@ -312,5 +330,392 @@ impl Effect for FadePairs {
 
     fn name(&self) -> String {
         "Fade Pairs".into()
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct Light1;
+impl Effect for Light1 {
+    fn render(&mut self, elders: &mut Vec<Elder>, _program_time: Duration, effect_time: Duration) {
+        for (i, elder) in elders.iter_mut().enumerate() {
+            if i == 0 {
+                elder.crane_light.r = 1.;
+                elder.crane_light.g = 0.;
+                elder.crane_light.b = 1.;
+            } else {
+                elder.crane_light.r = 0.;
+                elder.crane_light.g = 0.;
+                elder.crane_light.b = 0.;
+            }
+        }
+    }
+
+    fn name(&self) -> String {
+        "Light 1".into()
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct Light2;
+impl Effect for Light2 {
+    fn render(&mut self, elders: &mut Vec<Elder>, _program_time: Duration, effect_time: Duration) {
+        for (i, elder) in elders.iter_mut().enumerate() {
+            if i == 1 {
+                elder.crane_light.r = 1.;
+                elder.crane_light.g = 0.;
+                elder.crane_light.b = 1.;
+            } else {
+                elder.crane_light.r = 0.;
+                elder.crane_light.g = 0.;
+                elder.crane_light.b = 0.;
+            }
+        }
+    }
+
+    fn name(&self) -> String {
+        "Light 2".into()
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct Light3;
+impl Effect for Light3 {
+    fn render(&mut self, elders: &mut Vec<Elder>, _program_time: Duration, effect_time: Duration) {
+        for (i, elder) in elders.iter_mut().enumerate() {
+            if i == 2 {
+                elder.crane_light.r = 1.;
+                elder.crane_light.g = 0.;
+                elder.crane_light.b = 1.;
+            } else {
+                elder.crane_light.r = 0.;
+                elder.crane_light.g = 0.;
+                elder.crane_light.b = 0.;
+            }
+        }
+    }
+
+    fn name(&self) -> String {
+        "Light 3".into()
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct Light4;
+impl Effect for Light4 {
+    fn render(&mut self, elders: &mut Vec<Elder>, _program_time: Duration, effect_time: Duration) {
+        for (i, elder) in elders.iter_mut().enumerate() {
+            if i == 3 {
+                elder.crane_light.r = 1.;
+                elder.crane_light.g = 0.;
+                elder.crane_light.b = 1.;
+            } else {
+                elder.crane_light.r = 0.;
+                elder.crane_light.g = 0.;
+                elder.crane_light.b = 0.;
+            }
+        }
+    }
+
+    fn name(&self) -> String {
+        "Light 4".into()
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct Light5;
+impl Effect for Light5 {
+    fn render(&mut self, elders: &mut Vec<Elder>, _program_time: Duration, effect_time: Duration) {
+        for (i, elder) in elders.iter_mut().enumerate() {
+            if i == 4 {
+                elder.crane_light.r = 1.;
+                elder.crane_light.g = 0.;
+                elder.crane_light.b = 1.;
+            } else {
+                elder.crane_light.r = 0.;
+                elder.crane_light.g = 0.;
+                elder.crane_light.b = 0.;
+            }
+        }
+    }
+
+    fn name(&self) -> String {
+        "Light 5".into()
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct Light6;
+impl Effect for Light6 {
+    fn render(&mut self, elders: &mut Vec<Elder>, _program_time: Duration, effect_time: Duration) {
+        for (i, elder) in elders.iter_mut().enumerate() {
+            if i == 5 {
+                elder.crane_light.r = 1.;
+                elder.crane_light.g = 0.;
+                elder.crane_light.b = 1.;
+            } else {
+                elder.crane_light.r = 0.;
+                elder.crane_light.g = 0.;
+                elder.crane_light.b = 0.;
+            }
+        }
+    }
+
+    fn name(&self) -> String {
+        "Light 6".into()
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct Light7;
+impl Effect for Light7 {
+    fn render(&mut self, elders: &mut Vec<Elder>, _program_time: Duration, effect_time: Duration) {
+        for (i, elder) in elders.iter_mut().enumerate() {
+            if i == 6 {
+                elder.crane_light.r = 1.;
+                elder.crane_light.g = 0.;
+                elder.crane_light.b = 1.;
+            } else {
+                elder.crane_light.r = 0.;
+                elder.crane_light.g = 0.;
+                elder.crane_light.b = 0.;
+            }
+        }
+    }
+
+    fn name(&self) -> String {
+        "Light 7".into()
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct Light8;
+impl Effect for Light8 {
+    fn render(&mut self, elders: &mut Vec<Elder>, _program_time: Duration, effect_time: Duration) {
+        for (i, elder) in elders.iter_mut().enumerate() {
+            if i == 7 {
+                elder.crane_light.r = 1.;
+                elder.crane_light.g = 0.;
+                elder.crane_light.b = 1.;
+            } else {
+                elder.crane_light.r = 0.;
+                elder.crane_light.g = 0.;
+                elder.crane_light.b = 0.;
+            }
+        }
+    }
+
+    fn name(&self) -> String {
+        "Light 8".into()
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct Light9;
+impl Effect for Light9 {
+    fn render(&mut self, elders: &mut Vec<Elder>, _program_time: Duration, effect_time: Duration) {
+        for (i, elder) in elders.iter_mut().enumerate() {
+            if i == 8 {
+                elder.crane_light.r = 1.;
+                elder.crane_light.g = 0.;
+                elder.crane_light.b = 1.;
+            } else {
+                elder.crane_light.r = 0.;
+                elder.crane_light.g = 0.;
+                elder.crane_light.b = 0.;
+            }
+        }
+    }
+
+    fn name(&self) -> String {
+        "Light 9".into()
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct Poof1;
+impl Effect for Poof1 {
+    fn render(&mut self, elders: &mut Vec<Elder>, _program_time: Duration, effect_time: Duration) {
+        let t = effect_time.as_secs_f32();
+
+        let elder = &mut elders[0];
+        if t < 0.3 {
+            elder.poofer_wide.poof(true);
+            elder.poofer_narrow.poof(true);
+        } else {
+            elder.poofer_wide.poof(false);
+            elder.poofer_narrow.poof(false);
+        }
+    }
+
+    fn name(&self) -> String {
+        "Poof 1".into()
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct Poof2;
+impl Effect for Poof2 {
+    fn render(&mut self, elders: &mut Vec<Elder>, _program_time: Duration, effect_time: Duration) {
+        let t = effect_time.as_secs_f32();
+
+        let elder = &mut elders[1];
+        if t < 0.3 {
+            elder.poofer_wide.poof(true);
+            elder.poofer_narrow.poof(true);
+        } else {
+            elder.poofer_wide.poof(false);
+            elder.poofer_narrow.poof(false);
+        }
+    }
+
+    fn name(&self) -> String {
+        "Poof 2".into()
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct Poof3;
+impl Effect for Poof3 {
+    fn render(&mut self, elders: &mut Vec<Elder>, _program_time: Duration, effect_time: Duration) {
+        let t = effect_time.as_secs_f32();
+
+        let elder = &mut elders[2];
+        if t < 0.3 {
+            elder.poofer_wide.poof(true);
+            elder.poofer_narrow.poof(true);
+        } else {
+            elder.poofer_wide.poof(false);
+            elder.poofer_narrow.poof(false);
+        }
+    }
+
+    fn name(&self) -> String {
+        "Poof 3".into()
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct Poof4;
+impl Effect for Poof4 {
+    fn render(&mut self, elders: &mut Vec<Elder>, _program_time: Duration, effect_time: Duration) {
+        let t = effect_time.as_secs_f32();
+
+        let elder = &mut elders[3];
+        if t < 0.3 {
+            elder.poofer_wide.poof(true);
+            elder.poofer_narrow.poof(true);
+        } else {
+            elder.poofer_wide.poof(false);
+            elder.poofer_narrow.poof(false);
+        }
+    }
+
+    fn name(&self) -> String {
+        "Poof 4".into()
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct Poof5;
+impl Effect for Poof5 {
+    fn render(&mut self, elders: &mut Vec<Elder>, _program_time: Duration, effect_time: Duration) {
+        let t = effect_time.as_secs_f32();
+
+        let elder = &mut elders[4];
+        if t < 0.3 {
+            elder.poofer_wide.poof(true);
+            elder.poofer_narrow.poof(true);
+        } else {
+            elder.poofer_wide.poof(false);
+            elder.poofer_narrow.poof(false);
+        }
+    }
+
+    fn name(&self) -> String {
+        "Poof 5".into()
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct Poof6;
+impl Effect for Poof6 {
+    fn render(&mut self, elders: &mut Vec<Elder>, _program_time: Duration, effect_time: Duration) {
+        let t = effect_time.as_secs_f32();
+
+        let elder = &mut elders[5];
+        if t < 0.3 {
+            elder.poofer_wide.poof(true);
+            elder.poofer_narrow.poof(true);
+        } else {
+            elder.poofer_wide.poof(false);
+            elder.poofer_narrow.poof(false);
+        }
+    }
+
+    fn name(&self) -> String {
+        "Poof 6".into()
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct Poof7;
+impl Effect for Poof7 {
+    fn render(&mut self, elders: &mut Vec<Elder>, _program_time: Duration, effect_time: Duration) {
+        let t = effect_time.as_secs_f32();
+
+        let elder = &mut elders[6];
+        if t < 0.3 {
+            elder.poofer_wide.poof(true);
+            elder.poofer_narrow.poof(true);
+        } else {
+            elder.poofer_wide.poof(false);
+            elder.poofer_narrow.poof(false);
+        }
+    }
+
+    fn name(&self) -> String {
+        "Poof 7".into()
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct Poof8;
+impl Effect for Poof8 {
+    fn render(&mut self, elders: &mut Vec<Elder>, _program_time: Duration, effect_time: Duration) {
+        let t = effect_time.as_secs_f32();
+
+        let elder = &mut elders[7];
+        if t < 0.3 {
+            elder.poofer_wide.poof(true);
+            elder.poofer_narrow.poof(true);
+        } else {
+            elder.poofer_wide.poof(false);
+            elder.poofer_narrow.poof(false);
+        }
+    }
+
+    fn name(&self) -> String {
+        "Poof 8".into()
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct Poof9;
+impl Effect for Poof9 {
+    fn render(&mut self, elders: &mut Vec<Elder>, _program_time: Duration, effect_time: Duration) {
+        let t = effect_time.as_secs_f32();
+
+        let elder = &mut elders[8];
+        if t < 0.3 {
+            elder.poofer_wide.poof(true);
+            elder.poofer_narrow.poof(true);
+        } else {
+            elder.poofer_wide.poof(false);
+            elder.poofer_narrow.poof(false);
+        }
+    }
+
+    fn name(&self) -> String {
+        "Poof 9".into()
     }
 }

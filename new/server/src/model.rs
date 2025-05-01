@@ -60,7 +60,7 @@ pub struct Elder {
  * We use -1 to 1 for both X and Y axes.
  */
 pub fn create_elders() -> Vec<Elder> {
-    let starting_theta = -std::f32::consts::FRAC_PI_2;
+    let starting_theta = std::f32::consts::FRAC_PI_2;
     let crane_light_radius: f32 = 0.4;
     let poofer_radius: f32 = 0.6;
 

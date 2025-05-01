@@ -30,8 +30,8 @@ impl ArtnetOutputSocket {
                         .iter()
                         .flat_map(|pixel| {
                             [
-                                GAMMA[(pixel.r * 255.) as usize],
                                 GAMMA[(pixel.g * 255.) as usize],
+                                GAMMA[(pixel.r * 255.) as usize],
                                 GAMMA[(pixel.b * 255.) as usize],
                             ]
                         })
