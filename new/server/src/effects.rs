@@ -1,3 +1,4 @@
+use rand::Rng;
 use std::time::Duration;
 
 use crate::model::Elder;
@@ -49,6 +50,8 @@ pub fn get_trigger_effects() -> Vec<Box<dyn Effect>> {
         Box::new(Poof7),
         Box::new(Poof8),
         Box::new(Poof9),
+        Box::new(RandomPoof { index: 0, time: 0. }),
+        Box::new(Nonagram { index: 0, time: 0. }),
     ]
 }
 
@@ -58,6 +61,85 @@ pub fn get_effect(i: usize) -> Option<Box<dyn Effect>> {
 }
 
 const PERIOD: f32 = 20.;
+
+#[derive(Clone, Copy)]
+pub struct Nonagram {
+    index: usize,
+    time: f32,
+}
+impl Effect for Nonagram {
+    fn render(&mut self, elders: &mut Vec<Elder>, _program_time: Duration, effect_time: Duration) {
+        let t = effect_time.as_secs_f32();
+
+        let period = 0.5;
+
+        let poof_count = 900;
+        for i in 0..poof_count {
+            let threshold = i as f32 * period;
+            if self.time < threshold && t >= threshold {
+                self.index = (self.index + 4) % 9;
+            }
+        }
+        let off_threshold = poof_count as f32 * period;
+        if self.time < off_threshold && t >= off_threshold {
+            self.index = 10;
+        }
+
+        self.time = t;
+
+        for (i, elder) in elders.iter_mut().enumerate() {
+            if i == self.index {
+                elder.poofer_narrow.poof(true);
+            } else {
+                elder.poofer_narrow.poof(false);
+            }
+        }
+    }
+
+    fn name(&self) -> String {
+        "Nonagram".into()
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct RandomPoof {
+    index: usize,
+    time: f32,
+}
+impl Effect for RandomPoof {
+    fn render(&mut self, elders: &mut Vec<Elder>, _program_time: Duration, effect_time: Duration) {
+        let t = effect_time.as_secs_f32();
+        use rand::Rng;
+
+        let period = 0.5;
+
+        let poof_count = 900;
+        for i in 0..poof_count {
+            let threshold = i as f32 * period;
+            if self.time < threshold && t >= threshold {
+                self.index = rand::thread_rng().gen_range(0..9);
+            }
+        }
+        let off_threshold = poof_count as f32 * period;
+        if self.time < off_threshold && t >= off_threshold {
+            self.index = 10;
+        }
+
+        self.time = t;
+
+        for (i, elder) in elders.iter_mut().enumerate() {
+            if i == self.index {
+                elder.poofer_narrow.poof(true);
+            } else {
+                elder.poofer_narrow.poof(false);
+            }
+        }
+    }
+
+    fn name(&self) -> String {
+        "Random Poof".into()
+    }
+}
 
 #[derive(Clone, Copy)]
 pub struct AllPoofNarrow;
@@ -106,7 +188,8 @@ impl Effect for AllPoof {
         let t = effect_time.as_secs_f32();
 
         for elder in elders.iter_mut() {
-            if t < 0.3 {
+            if true {
+                // t < 0.3 {
                 elder.poofer_wide.poof(true);
                 elder.poofer_narrow.poof(true);
             } else {
@@ -169,7 +252,7 @@ impl Effect for PoofRing {
     fn render(&mut self, elders: &mut Vec<Elder>, program_time: Duration, _effect_time: Duration) {
         let t = program_time.as_secs_f32();
 
-        let poof_index = (t * 2.0) as usize % elders.len();
+        let poof_index = (t * 4.0) as usize % elders.len();
         for (i, elder) in elders.iter_mut().enumerate() {
             if i == poof_index {
                 elder.poofer_wide.poof(true);

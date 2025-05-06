@@ -6,8 +6,11 @@ mod poofer_bus_port;
 mod preview;
 
 use iced::{
-    ContentFit, Element, Length, Settings, Size, Subscription, Task, Theme, application, time,
-    window,
+    ContentFit, Element, Event, Length, Padding, Settings, Size, Subscription, Task, Theme,
+    application,
+    keyboard::{self, Key},
+    time,
+    window::{self, events},
 };
 use model::create_elders;
 use poofer_bus_port::PooferBusPort;
@@ -65,6 +68,8 @@ enum Message {
     SelectAmbientEffect(usize),
     SelectTriggerEffect(usize),
     SelectSerialPort(String),
+    ElderDown(usize),
+    ElderUp(usize),
 }
 impl App {
     fn new() -> (Self, Task<Message>) {
@@ -172,58 +177,89 @@ impl App {
                 self.poofer_port = Some(PooferBusPort::new(&port_name));
                 Task::none()
             }
+            Message::ElderDown(elder_i) => {
+                self.preview.0[elder_i].poofer_narrow.poof(true);
+                self.preview.0[elder_i].poofer_wide.poof(true);
+                Task::none()
+            }
+            Message::ElderUp(elder_i) => {
+                self.preview.0[elder_i].poofer_narrow.poof(false);
+                self.preview.0[elder_i].poofer_wide.poof(false);
+                Task::none()
+            }
         }
     }
 
     fn view(&self) -> Element<Message> {
         use iced::widget::{column, *};
-        container(row![
-            container(column(self.ambient_effects.iter().enumerate().map(
-                |(i, effect)| {
-                    (button(text(effect.name()))
-                        .style(if i == self.current_ambient_effect {
-                            button::primary
-                        } else {
-                            button::secondary
-                        })
-                        .on_press(Message::SelectAmbientEffect(i)))
-                    .into()
-                }
-            ))),
-            container(column(self.trigger_effects.iter().enumerate().map(
-                |(i, effect)| {
-                    (button(text(effect.name()))
-                        .style(if Some(i) == self.current_trigger_effect {
-                            button::primary
-                        } else {
-                            button::secondary
-                        })
-                        .on_press(Message::SelectTriggerEffect(i)))
-                    .into()
-                }
-            ))),
-            container(responsive(move |bounds| {
-                let Size { width, height } = ContentFit::Contain.fit(Size::new(1., 1.), bounds);
-                center(
-                    canvas(&self.preview)
-                        .width(Length::Fixed(width))
-                        .height(Length::Fixed(height)),
-                )
-                .into()
-            }))
-            .width(Length::Fill)
-            .height(Length::Fill),
-            column![
-                checkbox("Output LEDs", self.artnet_output_enabled)
-                    .on_toggle(|_| { Message::ArtnetOutputCheckboxPressed }),
-                checkbox("Output Poofers", self.poofer_output_enabled)
-                    .on_toggle(|_| { Message::PooferOutputCheckboxPressed }),
-                column(self.available_serial_ports.iter().map(|port_name| {
-                    button(text(port_name))
-                        .on_press(Message::SelectSerialPort(port_name.clone()))
+        container(column![
+            row![
+                container(column(self.ambient_effects.iter().enumerate().map(
+                    |(i, effect)| {
+                        (button(text(effect.name()))
+                            .style(if i == self.current_ambient_effect {
+                                button::primary
+                            } else {
+                                button::secondary
+                            })
+                            .on_press(Message::SelectAmbientEffect(i)))
                         .into()
-                })),
+                    }
+                ))),
+                container(column(self.trigger_effects.iter().enumerate().map(
+                    |(i, effect)| {
+                        (button(text(effect.name()))
+                            .style(if Some(i) == self.current_trigger_effect {
+                                button::primary
+                            } else {
+                                button::secondary
+                            })
+                            .on_press(Message::SelectTriggerEffect(i)))
+                        .into()
+                    }
+                ))),
+                container(responsive(move |bounds| {
+                    let Size { width, height } = ContentFit::Contain.fit(Size::new(1., 1.), bounds);
+                    center(
+                        canvas(&self.preview)
+                            .width(Length::Fixed(width))
+                            .height(Length::Fixed(height)),
+                    )
+                    .into()
+                }))
+                .width(Length::Fill)
+                .height(Length::Fill),
+                column![
+                    checkbox("Output LEDs", self.artnet_output_enabled)
+                        .on_toggle(|_| { Message::ArtnetOutputCheckboxPressed }),
+                    checkbox("Output Poofers", self.poofer_output_enabled)
+                        .on_toggle(|_| { Message::PooferOutputCheckboxPressed }),
+                    column(self.available_serial_ports.iter().map(|port_name| {
+                        button(text(port_name))
+                            .on_press(Message::SelectSerialPort(port_name.clone()))
+                            .into()
+                    })),
+                ],
             ],
+            container(
+                row(self.preview.0.iter().enumerate().map(|(i, elder)| {
+                    let number = i + 1;
+                    mouse_area(
+                        button(text(format!("      \n{number}\n      "))).padding(Padding {
+                            left: 10.,
+                            right: 10.,
+                            top: 10.,
+                            bottom: 10.,
+                        }),
+                    )
+                    .on_press(Message::ElderDown(i))
+                    .on_enter(Message::ElderDown(i))
+                    .on_release(Message::ElderUp(i))
+                    .on_exit(Message::ElderUp(i))
+                    .into()
+                }))
+                .width(Length::Fill)
+            )
         ])
         .width(Length::Fill)
         .height(Length::Fill)
@@ -231,7 +267,26 @@ impl App {
     }
 
     fn subscription(&self) -> Subscription<Message> {
-        time::every(Duration::from_millis(10)).map(Message::Tick)
+        Subscription::batch([
+            time::every(Duration::from_millis(10)).map(Message::Tick),
+            // events().map(|event| {
+            //     match event {
+            //         (
+            //             _window_id,
+            //             Event::Keyboard(keyboard::Event::KeyPressed {
+            //                 key,
+            //                 modified_key,
+            //                 physical_key,
+            //                 location,
+            //                 modifiers,
+            //                 text,
+            //             }),
+            //         ) => Message::ElderDown(match key {
+            //             Key::Character("1") => {}
+            //         }), // keyboard::Event::KeyReleased { key, location, modifiers } => {}
+            //     }
+            // }),
+        ])
     }
 
     fn turn_poofers_off(&mut self) {
